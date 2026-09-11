@@ -725,3 +725,77 @@ body{background:#02060b;min-height:100vh}
 @media(max-width:520px){.brand-sub{display:none}.brand-logo-img{width:38px;height:38px}.brand-title{font-size:15px}.nav-caption{display:none}.nav-button{min-width:44px;padding:10px}.nav-icon{font-size:17px}.topnav-status{display:none}.app{padding-top:115px}.cinematic-hero{min-height:720px}.hero-copy h2{font-size:42px}.hero-bottomline{font-size:6px}.pipe-note-peak{grid-template-columns:1fr}.zone-grid-peak{grid-template-columns:1fr 1fr!important}.pipe-intro-right{margin-top:12px}.page-intro{display:block}.pipe-intro-right{justify-content:flex-start}}
 
 @media(prefers-reduced-motion:reduce){.scene-layer,.scene-particles,.cinematic-orbit .orbit-ring,.orbit-sweep,.orbit-core img{animation:none!important;transition:none!important}.page{animation:none!important}}
+
+
+/* =========================================================
+   RHMS CLOUD CAMERA
+   ========================================================= */
+
+.camera-cloud-controls{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  margin-top:12px;
+}
+
+.camera-live-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.camera-live-info strong,
+.camera-live-info small{
+  display:block;
+}
+
+.camera-live-info strong{
+  color:#eef7fb;
+  font-size:10px;
+  letter-spacing:.08em;
+}
+
+.camera-live-info small{
+  color:#66778a;
+  font-size:9px;
+  margin-top:3px;
+}
+
+.camera-live-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#42e8a1;
+  box-shadow:
+    0 0 14px rgba(66,232,161,.8);
+  animation:
+    cameraPulse 1.7s infinite;
+}
+
+@keyframes cameraPulse{
+
+  0%,100%{
+    opacity:1;
+    transform:scale(1);
+  }
+
+  50%{
+    opacity:.45;
+    transform:scale(.72);
+  }
+
+}
+
+.camera-cloud-controls .primary-btn{
+  white-space:nowrap;
+}
+
+@media(max-width:700px){
+
+  .camera-cloud-controls{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+}
