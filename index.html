@@ -360,7 +360,35 @@
       <div class="panel camera-panel">
         <div class="camera-head"><div><span class="eyebrow">LIVE FEED</span><h3>Inspection camera</h3></div><span id="cameraStatus" class="status-badge">OFFLINE</span></div>
         <div class="camera-screen"><div class="camera-grid"></div><div class="camera-placeholder"><div class="camera-symbol">◉</div><strong id="cameraConnection">CAMERA FEED READY</strong><small>Enter your ESP32-CAM stream URL below.</small></div><img id="cameraStream" alt="ESP32-CAM stream"></div>
-        <div class="camera-controls"><input id="cameraUrl" class="input" placeholder="http://ESP32-CAM-IP/stream"><button class="primary-btn" id="startCameraBtn">Start stream</button><button class="ghost-btn" id="stopCameraBtn">Stop</button></div>
+       <div class="camera-controls camera-cloud-controls">
+
+  <div class="camera-live-info">
+
+    <span class="camera-live-dot"></span>
+
+    <div>
+
+      <strong id="cameraCloudState">
+        CONNECTING TO CAMERA
+      </strong>
+
+      <small id="cameraCloudTime">
+        Waiting for latest image...
+      </small>
+
+    </div>
+
+  </div>
+
+  <button
+    class="primary-btn"
+    id="refreshCameraBtn"
+    type="button"
+  >
+    ↻ Refresh
+  </button>
+
+</div>
       </div>
       <div class="panel camera-info"><span class="eyebrow">INSPECTION NOTES</span><h3>What to look for</h3><div class="check"><b>01</b><span>Visible cracks or breaks</span></div><div class="check"><b>02</b><span>Sediment or blockage</span></div><div class="check"><b>03</b><span>Water accumulation</span></div><div class="check"><b>04</b><span>Structural condition</span></div></div>
     </div>
