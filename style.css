@@ -1159,3 +1159,44 @@ body{background:#02060b;min-height:100vh}
   }
 
 }
+/* Marg Drishti condition colors */
+
+.md-condition-normal{
+  color:var(--green);
+}
+
+.md-condition-breaker{
+  color:var(--orange);
+}
+
+.md-condition-pothole{
+  color:var(--red);
+}
+
+.md-condition-rough{
+  color:var(--violet);
+}
+
+.md-condition-stationary{
+  color:var(--cyan);
+}
+
+#mdStatusPanel[data-condition="normal"]{
+  border-color:rgba(66,232,161,.28);
+}
+
+#mdStatusPanel[data-condition="breaker"]{
+  border-color:rgba(255,159,67,.28);
+}
+
+#mdStatusPanel[data-condition="pothole"]{
+  border-color:rgba(255,91,110,.30);
+}
+
+#mdStatusPanel[data-condition="rough"]{
+  border-color:rgba(169,139,255,.28);
+}
+
+#mdStatusPanel[data-condition="stationary"]{
+  border-color:rgba(49,231,255,.28);
+}
