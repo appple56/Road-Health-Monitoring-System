@@ -909,3 +909,136 @@ body{background:#02060b;min-height:100vh}
   .md-event{grid-template-columns:1fr;gap:7px}
   .md-event-confidence{text-align:left}
 }
+/* =========================================================
+   POTHOLE SEVERITY ASSESSMENT
+   ========================================================= */
+
+.pothole-assessment {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.025);
+}
+
+.assessment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.assessment-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.assessment-head strong {
+  font-size: 14px;
+}
+
+.assessment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.assessment-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+}
+
+.severity-badge.low {
+  background: rgba(46, 204, 113, 0.14);
+  border-color: rgba(46, 204, 113, 0.35);
+}
+
+.severity-badge.moderate {
+  background: rgba(241, 196, 15, 0.14);
+  border-color: rgba(241, 196, 15, 0.35);
+}
+
+.severity-badge.high {
+  background: rgba(230, 126, 34, 0.15);
+  border-color: rgba(230, 126, 34, 0.4);
+}
+
+.severity-badge.critical {
+  background: rgba(231, 76, 60, 0.16);
+  border-color: rgba(231, 76, 60, 0.45);
+}
+
+.pothole-assessment > small {
+  display: block;
+  margin-top: 12px;
+  opacity: 0.65;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   MARG DRISHTI GPS
+   ========================================================= */
+
+.md-meta-cell strong {
+  word-break: break-word;
+}
+
+#mdGpsLocation {
+  font-size: 12px;
+}
+
+#mdGpsSpeed {
+  font-size: 13px;
+}
+
+#mdGpsConnectionState,
+#mdDeviceLinkState {
+  font-size: 11px;
+}
+
+.md-event-device {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.md-event-device small {
+  opacity: 0.6;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .assessment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assessment-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+}
