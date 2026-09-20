@@ -1,5 +1,51 @@
-const SUPABASE_URL = "https://gphlolodqejrkphspucz.supabase.co";
-const SUPABASE_KEY = "sb_publishable_qw-XTj_NaVBZu7Kcd1KTFQ_8K51CgDv";
+/* =========================================================
+   RHMS — ROAD HEALTH MONITORING SYSTEM
+   FINAL FRONTEND JAVASCRIPT
+   =========================================================
+
+   DATA SOURCES
+   ---------------------------------------------------------
+   Supabase:
+     - pothole_reports
+     - pipe_status
+     - camera_frames
+     - pothole-images
+     - camera-images
+
+   LIVE SYSTEM
+   ---------------------------------------------------------
+   - Road reports refresh automatically
+   - Pipe status refreshes automatically
+   - Camera frame refreshes automatically
+   - Supabase Realtime updates supported
+   - Polling remains as a fallback
+
+   PIPE ZONES
+   ---------------------------------------------------------
+   PIPE A
+     A1 = GPIO 13
+     A2 = GPIO 14
+     A3 = GPIO 18
+     A4 = GPIO 19
+
+   PIPE B
+     B1 = GPIO 21
+     B2 = GPIO 22
+     B3 = GPIO 25
+     B4 = GPIO 26
+*/
+
+
+/* =========================================================
+   SUPABASE
+   ========================================================= */
+
+const SUPABASE_URL =
+  "https://gphlolodqejrkphspucz.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_qw-XTj_NaVBZu7Kcd1KTFQ_8K51CgDv";
+
 
 const supabaseClient =
   window.supabase.createClient(
@@ -7,49 +53,84 @@ const supabaseClient =
     SUPABASE_KEY
   );
 
-const $ = id =>
-  document.getElementById(id);
+
+/* =========================================================
+   GLOBAL STATE
+   ========================================================= */
 
 let allReports = [];
+
 let map = null;
+
 let markersLayer = null;
+
+let userLatitude = null;
+
+let userLongitude = null;
 
 let selectedFile = null;
 
-let userLatitude = null;
-let userLongitude = null;
+let pipeZonesBuilt = false;
+
+let latestCameraTimer = null;
+
+let pipePollingTimer = null;
+
+let reportPollingTimer = null;
+
+let realtimeChannel = null;
+
+let previousLeakZones = new Set();
 
 let margDrishtiEvents = [];
-let margChannel = null;
+let margDrishtiPollingTimer = null;
+let margDrishtiRealtimeChannel = null;
 
-let reportChannel = null;
-let pipeChannel = null;
-let cameraChannel = null;
+
+/* =========================================================
+   PAGE TITLES
+   ========================================================= */
 
 const pageTitles = {
-  dashboard:"Overview",
-  visual:"Visual Inspection",
-  report:"Report Road Problem",
-  map:"Pothole Map",
-  gallery:"Image Gallery",
-  reports:"Road Reports",
-  pipes:"Pipe Monitoring",
-  "marg-drishti":"Marg Drishti"
+
+  dashboard:
+    "Overview",
+
+  map:
+    "Pothole Map",
+
+  gallery:
+    "Image Gallery",
+
+  reports:
+    "Road Reports",
+
+  report:
+    "Report Road Problem",
+
+  pipes:
+    "Pipe Monitoring",
+
+  visual:
+    "Visual Inspection",
+
+  "marg-drishti":
+    "Marg Drishti"
+
 };
 
 
 /* =========================================================
-   HELPERS
-========================================================= */
+   SHORTCUT
+   ========================================================= */
 
-const escapeHTML = value =>
-  String(value ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+const $ = id =>
+  document.getElementById(id);
 
+
+/* =========================================================
+   SAFE ELEMENT TEXT
+   ========================================================= */
 
 function setText(
   id,
@@ -60,58 +141,176 @@ function setText(
     $(id);
 
   if(element){
+
     element.textContent =
       value;
+
   }
 
 }
 
 
-function formatDate(value){
+/* =========================================================
+   IMAGE URL HELPER
+========================================================= */
 
-  if(!value){
-    return "—";
-  }
+function getImageURL(
+  value
+){
 
-  const date =
-    new Date(value);
+  if(!value)
+    return "";
+
+
+  const raw =
+    String(
+      value
+    ).trim();
+
 
   if(
-    Number.isNaN(
-      date.getTime()
+    /^https?:\/\//i.test(
+      raw
     )
   ){
 
-    return "—";
+    return raw;
+
   }
 
-  return date.toLocaleString(
-    "en-IN",
-    {
-      day:"2-digit",
-      month:"short",
-      year:"numeric",
-      hour:"2-digit",
-      minute:"2-digit"
-    }
-  );
 
+  const cleanPath =
+    raw
+      .replace(
+        /^\/+/,
+        ""
+      )
+      .replace(
+        /^pothole-images\//,
+        ""
+      );
+
+
+  const result =
+    supabaseClient
+      .storage
+      .from(
+        "pothole-images"
+      )
+      .getPublicUrl(
+        cleanPath
+      );
+
+
+  return (
+    result &&
+    result.data &&
+    result.data.publicUrl
+  ) || "";
 }
 
 
-function formatTime(){
+/* =========================================================
+   CAMERA IMAGE URL
+========================================================= */
 
-  return new Date()
-    .toLocaleTimeString(
-      "en-IN",
-      {
-        hour:"2-digit",
-        minute:"2-digit",
-        second:"2-digit"
-      }
+function getCameraImageURL(
+  value
+){
+
+  if(!value)
+    return "";
+
+
+  const raw =
+    String(
+      value
+    ).trim();
+
+
+  if(
+    /^https?:\/\//i.test(
+      raw
+    )
+  ){
+
+    return raw;
+
+  }
+
+
+  const cleanPath =
+    raw
+      .replace(
+        /^\/+/,
+        ""
+      )
+      .replace(
+        /^camera-images\//,
+        ""
+      );
+
+
+  const result =
+    supabaseClient
+      .storage
+      .from(
+        "camera-images"
+      )
+      .getPublicUrl(
+        cleanPath
+      );
+
+
+  return (
+    result &&
+    result.data &&
+    result.data.publicUrl
+  ) || "";
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(
+  value
+){
+
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
     );
 
 }
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer =
+  null;
 
 
 function showToast(
@@ -122,31 +321,124 @@ function showToast(
   const toast =
     $("toast");
 
+
   if(!toast){
+
+    console.log(
+      message
+    );
+
     return;
+
   }
+
 
   toast.textContent =
     message;
 
+
   toast.className =
     `toast show ${type}`;
 
+
   clearTimeout(
-    window.__toast
+    toastTimer
   );
 
-  window.__toast =
+
+  toastTimer =
     setTimeout(
       () => {
+
         toast.className =
           "toast";
+
       },
-      2800
+      3000
     );
 
 }
 
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
+function formatDate(
+  value
+){
+
+  if(!value)
+    return "Unknown date";
+
+
+  const date =
+    new Date(
+      value
+    );
+
+
+  if(
+    Number.isNaN(
+      date.getTime()
+    )
+  ){
+
+    return "Unknown date";
+
+  }
+
+
+  return date.toLocaleString(
+    "en-IN",
+    {
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      year:
+        "numeric",
+
+      hour:
+        "2-digit",
+
+      minute:
+        "2-digit"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   TIME FORMAT
+========================================================= */
+
+function formatTime(){
+
+  return new Date()
+    .toLocaleTimeString(
+      "en-IN",
+      {
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit",
+
+        second:
+          "2-digit"
+      }
+    );
+
+}
+
+
+/* =========================================================
+   STATUS CLASS
+========================================================= */
 
 function statusClass(
   status
@@ -183,9 +475,10 @@ function showPage(
         )
     );
 
+
   document
     .querySelectorAll(
-      ".nav-btn"
+      ".nav-button"
     )
     .forEach(
       button =>
@@ -194,31 +487,56 @@ function showPage(
         )
     );
 
+
   const page =
     $(pageId);
 
-  const nav =
-    document.querySelector(
-      `.nav-btn[data-page="${pageId}"]`
-    );
 
   if(page){
+
     page.classList.add(
       "active"
     );
+
   }
 
+
+  const nav =
+    document.querySelector(
+      `.nav-button[data-page="${pageId}"]`
+    );
+
+
   if(nav){
+
     nav.classList.add(
       "active"
     );
+
   }
+
 
   setText(
     "pageTitle",
-    pageTitles[pageId] ||
-    "RHMS"
+    pageTitles[pageId] || "RHMS"
   );
+
+
+  setText(
+    "topPageTitle",
+    pageTitles[pageId] || "RHMS"
+  );
+
+
+  $("sidebar")
+    ?.classList.remove(
+      "open"
+    );
+
+
+  /* -------------------------------------------------------
+     PAGE-SPECIFIC ACTIONS
+  ------------------------------------------------------- */
 
   if(
     pageId === "map"
@@ -230,18 +548,38 @@ function showPage(
         initMap();
 
         if(map){
+
           map.invalidateSize(
             true
           );
+
+
+          setTimeout(
+            () => {
+
+              if(map){
+
+                map.invalidateSize(
+                  true
+                );
+
+              }
+
+            },
+            250
+          );
+
         }
+
 
         renderMarkers();
 
       },
-      80
+      100
     );
 
   }
+
 
   if(
     pageId === "gallery"
@@ -251,6 +589,7 @@ function showPage(
 
   }
 
+
   if(
     pageId === "reports"
   ){
@@ -259,6 +598,7 @@ function showPage(
 
   }
 
+
   if(
     pageId === "pipes"
   ){
@@ -266,6 +606,7 @@ function showPage(
     loadPipeStatus();
 
   }
+
 
   if(
     pageId === "visual"
@@ -283,12 +624,27 @@ function showPage(
 
   }
 
+
+  if(
+    pageId === "dashboard"
+  ){
+
+    renderRecent();
+
+    updateStatistics();
+
+  }
+
 }
 
 
+/* =========================================================
+   NAV LISTENERS
+========================================================= */
+
 document
   .querySelectorAll(
-    ".nav-btn"
+    ".nav-button"
   )
   .forEach(
     button => {
@@ -307,6 +663,10 @@ document
     }
   );
 
+
+/* =========================================================
+   DATA JUMP BUTTONS
+========================================================= */
 
 document
   .querySelectorAll(
@@ -330,22 +690,48 @@ document
   );
 
 
+/* =========================================================
+   MOBILE MENU
+========================================================= */
+
+$("menuBtn")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      $("sidebar")
+        ?.classList.toggle(
+          "open"
+        );
+
+    }
+  );
+
+
+/* =========================================================
+   CURRENT DATE
+========================================================= */
+
 setText(
   "currentDate",
-  new Date()
-    .toLocaleDateString(
-      "en-IN",
-      {
-        day:"2-digit",
-        month:"short",
-        year:"numeric"
-      }
-    )
+  new Date().toLocaleDateString(
+    "en-IN",
+    {
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      year:
+        "numeric"
+    }
+  )
 );
 
 
 /* =========================================================
-   REPORT DATA
+   SUPABASE REPORT DATA
 ========================================================= */
 
 async function fetchReports(){
@@ -355,147 +741,233 @@ async function fetchReports(){
     error
   } =
     await supabaseClient
+
       .from(
         "pothole_reports"
       )
+
       .select(
         "*"
       )
+
       .order(
         "reported_at",
         {
-          ascending:false
+          ascending:
+            false
         }
       );
 
+
   if(error){
+
+    console.error(
+      "REPORT FETCH ERROR:",
+      error
+    );
+
 
     setText(
       "dbStatus",
       "ERROR"
     );
 
+
     setText(
       "systemText",
       "DATABASE ERROR"
     );
 
-    console.error(
-      error
-    );
 
     return [];
 
   }
+
 
   setText(
     "dbStatus",
     "CONNECTED"
   );
 
+
   setText(
     "systemText",
     "SYSTEM ONLINE"
   );
+
 
   setText(
     "lastSync",
     formatTime()
   );
 
+
   return data || [];
 
 }
 
 
+/* =========================================================
+   REFRESH REPORT DATA
+========================================================= */
+
 async function refreshReports(){
 
-  allReports =
+  const reports =
     await fetchReports();
 
+
+  allReports =
+    reports;
+
+
   renderRecent();
+
+  updateStatistics();
+
   renderReports();
+
   renderGallery();
-  updateStats();
+
 
   if(map){
+
     renderMarkers();
+
   }
 
 }
 
 
-async function updateStats(){
+/* =========================================================
+   UPDATE DASHBOARD STATISTICS
+========================================================= */
+
+async function updateStatistics(){
+
+  const reports =
+    allReports;
+
 
   setText(
     "totalReports",
-    allReports.length
+    reports.length
   );
+
 
   setText(
     "pendingReports",
-    allReports.filter(
+    reports.filter(
       report =>
         String(
           report.status
-        )
-          .toLowerCase() ===
+        ).toLowerCase() ===
         "pending"
     ).length
   );
 
+
   setText(
     "verifiedReports",
-    allReports.filter(
+    reports.filter(
       report =>
         String(
           report.status
-        )
-          .toLowerCase() ===
+        ).toLowerCase() ===
         "verified"
     ).length
   );
 
-  const {
-    data
-  } =
-    await supabaseClient
-      .from(
-        "pipe_status"
-      )
-      .select(
-        "status"
-      );
 
-  setText(
-    "activeLeaks",
-    data
-      ? data.filter(
+  try{
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+
+        .from(
+          "pipe_status"
+        )
+
+        .select(
+          "zone,status"
+        );
+
+
+    if(
+      !error &&
+      data
+    ){
+
+      const leaks =
+        data.filter(
           row =>
             String(
-              row.status
-            )
-              .toUpperCase() ===
+              row.status || ""
+            ).toUpperCase() ===
             "LEAK"
-        ).length
+        ).length;
 
-      : "—"
-  );
+
+      setText(
+        "activeLeaks",
+        leaks
+      );
+
+    }
+    else{
+
+      setText(
+        "activeLeaks",
+        "—"
+      );
+
+    }
+
+  }
+  catch(error){
+
+    console.error(
+      "STATISTICS ERROR:",
+      error
+    );
+
+
+    setText(
+      "activeLeaks",
+      "—"
+    );
+
+  }
 
 }
 
+
+/* =========================================================
+   RECENT REPORTS
+========================================================= */
 
 function renderRecent(){
 
   const box =
     $("recentReports");
 
-  if(!box){
+
+  if(!box)
     return;
-  }
+
+
+  const recent =
+    allReports.slice(
+      0,
+      5
+    );
+
 
   if(
-    !allReports.length
+    !recent.length
   ){
 
     box.innerHTML =
@@ -509,74 +981,88 @@ function renderRecent(){
 
   }
 
+
   box.innerHTML =
-    allReports
-      .slice(
-        0,
-        5
-      )
+    recent
       .map(
-        report => `
+        report => {
 
-          <div class="list-item">
+          const image =
+            report.image_url
+              ? `
+                <img
+                  class="thumb"
+                  src="${escapeHTML(
+                    report.image_url
+                  )}"
+                  alt="Road report"
+                  onerror="this.style.display='none'"
+                >
+              `
+              : `
+                <div class="thumb"></div>
+              `;
 
-            <img
-              class="thumb"
-              src="${escapeHTML(
-                report.image_url || ""
-              )}"
-              onerror="
-                this.style.visibility='hidden'
-              "
-            >
 
-            <div>
+          return `
+            <div class="recent-item">
 
-              <strong>
+              ${image}
+
+              <div>
+
+                <strong>
+                  ${escapeHTML(
+                    report.problem_type ||
+                    "Road report"
+                  )}
+                </strong>
+
+                <small>
+                  ${escapeHTML(
+                    report.description ||
+                    "No description"
+                  )}
+
+                  ·
+
+                  ${formatDate(
+                    report.reported_at
+                  )}
+                </small>
+
+              </div>
+
+              <span class="recent-status">
                 ${escapeHTML(
-                  report.problem_type ||
-                  "Road report"
+                  report.status ||
+                  "Pending"
                 )}
-              </strong>
-
-              <small>
-                ${escapeHTML(
-                  report.description ||
-                  "No description"
-                )}
-                ·
-                ${formatDate(
-                  report.reported_at
-                )}
-              </small>
+              </span>
 
             </div>
+          `;
 
-            <span class="badge">
-              ${escapeHTML(
-                report.severity ||
-                report.status ||
-                "Pending"
-              )}
-            </span>
-
-          </div>
-
-        `
+        }
       )
       .join("");
 
 }
 
 
+/* =========================================================
+   FULL REPORTS
+========================================================= */
+
 function renderReports(){
 
   const box =
     $("reportsList");
 
-  if(!box){
+
+  if(!box)
     return;
-  }
+
 
   if(
     !allReports.length
@@ -593,284 +1079,66 @@ function renderReports(){
 
   }
 
+
   box.innerHTML =
     allReports
       .map(
-        report => `
+        report => {
 
-          <div class="report-row">
+          const image =
+            report.image_url
+              ? `
+                <img
+                  class="report-image"
+                  src="${escapeHTML(
+                    report.image_url
+                  )}"
+                  alt="Road report"
+                  onerror="this.style.opacity=.25"
+                >
+              `
+              : `
+                <div class="report-image"></div>
+              `;
 
-            <div class="report-main">
 
-              <img
-                class="report-image"
-                src="${escapeHTML(
-                  report.image_url || ""
-                )}"
-                onerror="
-                  this.style.opacity=.2
-                "
-              >
+          return `
+            <div class="report-row">
 
-              <div>
+              <div class="report-main">
 
-                <div class="report-id">
-                  REPORT #
-                  ${escapeHTML(
-                    report.id
-                  )}
-                </div>
+                ${image}
 
-                <div class="report-title">
-                  ${escapeHTML(
-                    report.description ||
-                    report.problem_type ||
-                    "Road report"
-                  )}
+                <div>
+
+                  <div class="report-id">
+                    REPORT #${escapeHTML(
+                      report.id
+                    )}
+                  </div>
+
+                  <div class="report-title">
+                    ${escapeHTML(
+                      report.description ||
+                      report.problem_type ||
+                      "Road report"
+                    )}
+                  </div>
+
                 </div>
 
               </div>
 
-            </div>
 
-
-            <div class="report-type">
-              ${escapeHTML(
-                report.problem_type ||
-                "—"
-              )}
-            </div>
-
-
-            <div>
-
-              <span
-                class="
-                  status-pill
-                  ${statusClass(
-                    report.status
-                  )}
-                "
-              >
-                ${escapeHTML(
-                  report.status ||
-                  "Pending"
-                )}
-              </span>
-
-            </div>
-
-
-            <div class="report-time">
-
-              ${escapeHTML(
-                report.severity ||
-                "N/A"
-              )}
-
-              <br>
-
-              ${escapeHTML(
-                formatDate(
-                  report.reported_at
-                )
-              )}
-
-            </div>
-
-          </div>
-
-        `
-      )
-      .join("");
-
-}
-
-
-/* =========================================================
-   STORAGE / GALLERY
-========================================================= */
-
-function getImageURL(
-  value,
-  bucket = "pothole-images"
-){
-
-  if(!value){
-    return "";
-  }
-
-  const raw =
-    String(
-      value
-    ).trim();
-
-  if(
-    /^https?:\/\//i.test(
-      raw
-    )
-  ){
-
-    return raw;
-
-  }
-
-  const clean =
-    raw
-      .replace(
-        /^\/+/,
-        ""
-      )
-      .replace(
-        new RegExp(
-          `^${bucket}\\/`
-        ),
-        ""
-      );
-
-  return (
-    supabaseClient
-      .storage
-      .from(
-        bucket
-      )
-      .getPublicUrl(
-        clean
-      )
-      ?.data
-      ?.publicUrl
-  ) || "";
-
-}
-
-
-function renderGallery(){
-
-  const box =
-    $("galleryGrid");
-
-  if(!box){
-    return;
-  }
-
-  const search =
-    (
-      $("gallerySearch")
-        ?.value ||
-      ""
-    )
-      .toLowerCase()
-      .trim();
-
-  const filter =
-    $("galleryFilter")
-      ?.value ||
-    "all";
-
-  const reports =
-    allReports
-      .filter(
-        report => {
-
-          const searchMatch =
-            !search ||
-
-            String(
-              report.problem_type ||
-              ""
-            )
-              .toLowerCase()
-              .includes(
-                search
-              ) ||
-
-            String(
-              report.description ||
-              ""
-            )
-              .toLowerCase()
-              .includes(
-                search
-              );
-
-          const filterMatch =
-            filter === "all" ||
-
-            String(
-              report.status ||
-              ""
-            )
-              .toLowerCase() ===
-            filter.toLowerCase();
-
-          return (
-            searchMatch &&
-            filterMatch
-          );
-
-        }
-      )
-      .map(
-        report => ({
-          ...report,
-
-          url:
-            getImageURL(
-              report.image_url
-            )
-        })
-      )
-      .filter(
-        report =>
-          report.url
-      );
-
-  if(
-    !reports.length
-  ){
-
-    box.innerHTML =
-      `
-        <div class="panel">
-          No images found.
-        </div>
-      `;
-
-    return;
-
-  }
-
-  box.innerHTML =
-    reports
-      .map(
-        report => `
-
-          <article class="gallery-card">
-
-            <img
-              src="${escapeHTML(
-                report.url
-              )}"
-              alt="Road report"
-            >
-
-            <div class="gallery-body">
-
-              <h3>
+              <div class="report-type">
                 ${escapeHTML(
                   report.problem_type ||
-                  "Road report"
+                  "—"
                 )}
-              </h3>
+              </div>
 
-              <p>
-                ${escapeHTML(
-                  report.description ||
-                  "No description"
-                )}
-              </p>
 
-              <div class="gallery-meta">
+              <div>
 
                 <span
                   class="
@@ -881,32 +1149,403 @@ function renderGallery(){
                   "
                 >
                   ${escapeHTML(
-                    report.severity ||
                     report.status ||
                     "Pending"
                   )}
                 </span>
 
-                <small>
-                  ${escapeHTML(
-                    formatDate(
-                      report.reported_at
-                    )
-                  )}
-                </small>
+              </div>
 
+
+              <div class="report-time">
+                ${formatDate(
+                  report.reported_at
+                )}
               </div>
 
             </div>
+          `;
 
-          </article>
-
-        `
+        }
       )
       .join("");
 
 }
 
+
+/* =========================================================
+   GALLERY
+========================================================= */
+
+function renderGallery(){
+
+  const box =
+    $("galleryGrid");
+
+
+  if(!box)
+    return;
+
+
+  const search =
+    (
+      $("gallerySearch")
+        ?.value ||
+      ""
+    )
+      .toLowerCase()
+      .trim();
+
+
+  const filter =
+    $("galleryFilter")
+      ?.value ||
+    "all";
+
+
+  const filteredReports =
+    allReports.filter(
+      report => {
+
+        const matchesSearch =
+          !search ||
+
+          String(
+            report.problem_type ||
+            ""
+          )
+            .toLowerCase()
+            .includes(
+              search
+            ) ||
+
+          String(
+            report.description ||
+            ""
+          )
+            .toLowerCase()
+            .includes(
+              search
+            );
+
+
+        const matchesFilter =
+          filter === "all" ||
+
+          String(
+            report.status ||
+            ""
+          )
+            .toLowerCase() ===
+          filter.toLowerCase();
+
+
+        return (
+          matchesSearch &&
+          matchesFilter
+        );
+
+      }
+    );
+
+
+  const withImages =
+    filteredReports
+      .map(
+        report => ({
+
+          ...report,
+
+          displayImageURL:
+            getImageURL(
+              report.image_url
+            )
+
+        })
+      )
+      .filter(
+        report =>
+          report.displayImageURL
+      );
+
+
+  if(
+    !withImages.length
+  ){
+
+    box.innerHTML =
+      `
+        <div
+          class="
+            empty-state
+            gallery-empty
+          "
+        >
+
+          <strong>
+            No images found
+          </strong>
+
+          <span>
+            Upload a road report with an image
+            to see it here.
+          </span>
+
+        </div>
+      `;
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+    withImages
+      .map(
+        (
+          report,
+          index
+        ) => {
+
+          const url =
+            escapeHTML(
+              report.displayImageURL
+            );
+
+
+          return `
+            <article
+              class="gallery-card"
+              style="
+                animation-delay:
+                ${Math.min(
+                  index * 45,
+                  600
+                )}ms
+              "
+            >
+
+              <div
+                class="gallery-image-wrap"
+              >
+
+                <img
+                  class="gallery-image"
+                  src="${url}"
+                  alt="${escapeHTML(
+                    report.problem_type ||
+                    "Road report"
+                  )}"
+                  loading="lazy"
+                  decoding="async"
+                  onerror="
+                    galleryImageFailed(this)
+                  "
+                >
+
+
+                <div
+                  class="gallery-image-loading"
+                >
+
+                  <span></span>
+
+                  LOADING
+
+                </div>
+
+
+                <div
+                  class="gallery-image-error"
+                >
+                  IMAGE UNAVAILABLE
+                </div>
+
+
+                <div
+                  class="gallery-overlay"
+                >
+
+                  <span
+                    class="gallery-view-label"
+                  >
+                    VIEW IMAGE
+                  </span>
+
+
+                  <button
+                    class="gallery-open"
+                    type="button"
+                    data-image="${url}"
+                    data-caption="${escapeHTML(
+                      report.problem_type ||
+                      "Road report"
+                    )}"
+                  >
+                    OPEN ↗
+                  </button>
+
+                </div>
+
+
+                <span
+                  class="gallery-index"
+                >
+                  #${String(
+                    index + 1
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </span>
+
+              </div>
+
+
+              <div class="gallery-body">
+
+                <div
+                  class="gallery-heading"
+                >
+
+                  <h3>
+                    ${escapeHTML(
+                      report.problem_type ||
+                      "Road report"
+                    )}
+                  </h3>
+
+                  <span
+                    class="gallery-dot"
+                  ></span>
+
+                </div>
+
+
+                <p>
+                  ${escapeHTML(
+                    report.description ||
+                    "No description provided."
+                  )}
+                </p>
+
+
+                <div
+                  class="gallery-meta"
+                >
+
+                  <span
+                    class="
+                      status-pill
+                      ${statusClass(
+                        report.status
+                      )}
+                    "
+                  >
+                    ${escapeHTML(
+                      report.status ||
+                      "Pending"
+                    )}
+                  </span>
+
+
+                  <small>
+                    ${formatDate(
+                      report.reported_at
+                    )}
+                  </small>
+
+                </div>
+
+              </div>
+
+            </article>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  box
+    .querySelectorAll(
+      ".gallery-image"
+    )
+    .forEach(
+      image => {
+
+        image.addEventListener(
+          "load",
+          () => {
+
+            image.classList.add(
+              "loaded"
+            );
+
+            image.parentElement
+              .classList.add(
+                "image-ready"
+              );
+
+          },
+          {
+            once:true
+          }
+        );
+
+      }
+    );
+
+
+  box
+    .querySelectorAll(
+      ".gallery-open"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            openLightbox(
+              button.dataset.image,
+              button.dataset.caption
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   GALLERY ERROR
+========================================================= */
+
+function galleryImageFailed(
+  img
+){
+
+  img.classList.add(
+    "broken"
+  );
+
+
+  img.parentElement
+    .classList.add(
+      "image-error"
+    );
+
+}
+
+
+/* =========================================================
+   GALLERY EVENTS
+========================================================= */
 
 $("gallerySearch")
   ?.addEventListener(
@@ -925,7 +1564,22 @@ $("galleryFilter")
 $("refreshGallery")
   ?.addEventListener(
     "click",
-    refreshReports
+    async () => {
+
+      showToast(
+        "Refreshing gallery…"
+      );
+
+
+      await refreshReports();
+
+
+      showToast(
+        "Gallery updated",
+        "success"
+      );
+
+    }
   );
 
 
@@ -935,32 +1589,40 @@ $("refreshGallery")
 
 function initMap(){
 
-  if(
-    map ||
-    !window.L ||
-    !$("potholeMap")
-  ){
-
+  if(map)
     return;
 
-  }
+
+  if(
+    !window.L ||
+    !$("potholeMap")
+  )
+    return;
+
 
   map =
     L.map(
-      "potholeMap"
+      "potholeMap",
+      {
+        zoomControl:
+          true
+      }
     )
       .setView(
         [
-          28.6139,
-          77.2090
+          28.6692,
+          77.4538
         ],
         11
       );
 
+
   L.tileLayer(
     "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     {
-      maxZoom:19,
+      maxZoom:
+        19,
+
       attribution:
         "&copy; OpenStreetMap contributors"
     }
@@ -968,6 +1630,7 @@ function initMap(){
     .addTo(
       map
     );
+
 
   markersLayer =
     L.layerGroup()
@@ -978,45 +1641,97 @@ function initMap(){
 }
 
 
-function markerColor(
+/* =========================================================
+   MAP MARKER ICON
+========================================================= */
+
+function makeMarkerIcon(
   status
 ){
 
-  const value =
+  const normalized =
     String(
       status || ""
-    )
-      .toLowerCase();
+    ).toLowerCase();
 
-  return value === "verified"
-    ? "#42e8a1"
 
-    : value === "resolved"
-      ? "#31e7ff"
+  const color =
+    normalized === "verified"
+      ? "#42e8a1"
 
-      : "#ff9f43";
+      : normalized === "resolved"
+        ? "#31e7ff"
+
+        : "#ff9f43";
+
+
+  return L.divIcon({
+
+    className:
+      "",
+
+    html:
+      `
+        <div
+          style="
+            width:18px;
+            height:18px;
+            border-radius:50%;
+            background:${color};
+            border:3px solid #071018;
+            box-shadow:
+              0 0 0 5px ${color}33,
+              0 0 22px ${color}99;
+          "
+        ></div>
+      `,
+
+    iconSize:
+      [
+        18,
+        18
+      ],
+
+    iconAnchor:
+      [
+        9,
+        9
+      ],
+
+    popupAnchor:
+      [
+        0,
+        -8
+      ]
+
+  });
 
 }
 
+
+/* =========================================================
+   MAP MARKERS
+========================================================= */
 
 function renderMarkers(){
 
   if(
     !map ||
     !markersLayer
-  ){
-
+  )
     return;
 
-  }
 
   markersLayer.clearLayers();
+
+
+  let count =
+    0;
+
 
   const bounds =
     [];
 
-  let count =
-    0;
 
   allReports.forEach(
     report => {
@@ -1026,21 +1741,29 @@ function renderMarkers(){
           report.latitude
         );
 
+
       const lng =
         Number(
           report.longitude
         );
 
+
       if(
-        !Number.isFinite(lat) ||
-        !Number.isFinite(lng)
+        !Number.isFinite(
+          lat
+        ) ||
+        !Number.isFinite(
+          lng
+        )
       ){
 
         return;
 
       }
 
+
       count++;
+
 
       bounds.push(
         [
@@ -1049,104 +1772,77 @@ function renderMarkers(){
         ]
       );
 
-      const color =
-        markerColor(
-          report.status
-        );
 
-      const icon =
-        L.divIcon(
-          {
-            className:"",
-            html:
-              `
-                <div
-                  style="
-                    width:16px;
-                    height:16px;
-                    border-radius:50%;
-                    background:${color};
-                    border:3px solid #071018;
-                    box-shadow:
-                      0 0 0 5px ${color}33;
-                  "
-                ></div>
-              `,
-            iconSize:[
-              16,
-              16
-            ],
-            iconAnchor:[
-              8,
-              8
-            ]
-          }
-        );
+      const image =
+        report.image_url
+
+          ? `
+              <img
+                class="popup-img"
+                src="${escapeHTML(
+                  report.image_url
+                )}"
+                alt="Report image"
+                onerror="
+                  this.style.display='none'
+                "
+              >
+            `
+
+          : "";
+
 
       const popup =
         `
-          <b>
+          ${image}
+
+          <div class="popup-title">
             ${escapeHTML(
               report.problem_type ||
               "Road report"
             )}
-          </b>
+          </div>
 
-          <br>
+          <div class="popup-row">
+            Status:
+            <b>
+              ${escapeHTML(
+                report.status ||
+                "Pending"
+              )}
+            </b>
+          </div>
 
-          Status:
-          <b>
+          <div class="popup-row">
+            Severity:
+            <b>
+              ${escapeHTML(
+                report.severity ||
+                "Unknown"
+              )}
+            </b>
+          </div>
+
+          <div class="popup-row">
             ${escapeHTML(
-              report.status ||
-              "Pending"
+              report.description ||
+              "No description"
             )}
-          </b>
+          </div>
 
-          <br>
-
-          Severity:
-          <b>
-            ${escapeHTML(
-              report.severity ||
-              "N/A"
-            )}
-          </b>
-
-          <br>
-
-          Depth:
-          <b>
-            ${escapeHTML(
-              report.pothole_depth ||
-              "—"
-            )}
-          </b>
-
-          <br>
-
-          Size:
-          <b>
-            ${escapeHTML(
-              report.pothole_size ||
-              "—"
-            )}
-          </b>
-
-          <br>
-
-          ${escapeHTML(
-            report.description ||
-            ""
-          )}
-
-          <br>
-
-          GPS:
-          <b>
-            ${lat.toFixed(6)},
-            ${lng.toFixed(6)}
-          </b>
+          <div class="popup-row">
+            GPS:
+            <b>
+              ${lat.toFixed(
+                6
+              )},
+              ${lng.toFixed(
+                6
+              )}
+            </b>
+          </div>
         `;
+
 
       L.marker(
         [
@@ -1154,7 +1850,10 @@ function renderMarkers(){
           lng
         ],
         {
-          icon
+          icon:
+            makeMarkerIcon(
+              report.status
+            )
         }
       )
         .bindPopup(
@@ -1167,14 +1866,16 @@ function renderMarkers(){
     }
   );
 
+
   setText(
     "mapCount",
     count
   );
 
+
   if(
     bounds.length &&
-    $("map").classList.contains(
+    $("map")?.classList.contains(
       "active"
     )
   ){
@@ -1183,10 +1884,12 @@ function renderMarkers(){
       bounds,
       {
         padding:[
-          30,
-          30
+          35,
+          35
         ],
-        maxZoom:16
+
+        maxZoom:
+          16
       }
     );
 
@@ -1195,30 +1898,180 @@ function renderMarkers(){
 }
 
 
+/* =========================================================
+   MAP CONTROLS
+========================================================= */
+
 $("fitMarkersBtn")
   ?.addEventListener(
     "click",
     () => {
 
-      if(map){
-        renderMarkers();
+      if(!map)
+        return;
+
+
+      const points =
+        allReports
+          .map(
+            report => [
+              Number(
+                report.latitude
+              ),
+              Number(
+                report.longitude
+              )
+            ]
+          )
+          .filter(
+            point =>
+              Number.isFinite(
+                point[0]
+              ) &&
+              Number.isFinite(
+                point[1]
+              )
+          );
+
+
+      if(points.length){
+
+        map.fitBounds(
+          points,
+          {
+            padding:[
+              35,
+              35
+            ],
+
+            maxZoom:
+              16
+          }
+        );
+
+      }
+      else{
+
+        showToast(
+          "No mapped reports yet"
+        );
+
       }
 
     }
   );
 
 
+$("locateMapBtn")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      if(
+        !navigator.geolocation
+      ){
+
+        showToast(
+          "Geolocation is not supported",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      navigator
+        .geolocation
+        .getCurrentPosition(
+
+          position => {
+
+            if(!map)
+              return;
+
+
+            map.setView(
+              [
+                position.coords.latitude,
+                position.coords.longitude
+              ],
+              16
+            );
+
+
+            L.circleMarker(
+              [
+                position.coords.latitude,
+                position.coords.longitude
+              ],
+              {
+                radius:
+                  7,
+
+                color:
+                  "#31e7ff",
+
+                fillColor:
+                  "#31e7ff",
+
+                fillOpacity:
+                  .8
+              }
+            )
+              .addTo(
+                map
+              )
+              .bindPopup(
+                "Your current location"
+              )
+              .openPopup();
+
+          },
+
+          () => {
+
+            showToast(
+              "Location permission denied",
+              "error"
+            );
+
+          }
+
+        );
+
+    }
+  );
+
+
 /* =========================================================
-   REPORT IMAGE
+   ROAD REPORT UPLOAD
+========================================================= */
+
+$("potholeImage")
+  ?.addEventListener(
+    "change",
+    event => {
+
+      handleSelectedFile(
+        event.target.files[0]
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   HANDLE SELECTED FILE
 ========================================================= */
 
 function handleSelectedFile(
   file
 ){
 
-  if(!file){
+  if(!file)
     return;
-  }
+
 
   if(
     !file.type.startsWith(
@@ -1235,6 +2088,7 @@ function handleSelectedFile(
 
   }
 
+
   if(
     file.size >
     10 * 1024 * 1024
@@ -1249,35 +2103,57 @@ function handleSelectedFile(
 
   }
 
+
   selectedFile =
     file;
 
+
   $("uploadZone")
-    .classList.add(
-      "has-image"
+    ?.classList.add(
+      "has-preview"
     );
+
 
   setText(
     "uploadTitle",
     file.name
   );
 
+
   const reader =
     new FileReader();
+
 
   reader.onload =
     event => {
 
-      $("previewImageBox")
-        .innerHTML =
-        `
-          <img
-            src="${event.target.result}"
-            alt="Preview"
-          >
-        `;
+      if(
+        $("imagePreview")
+      ){
+
+        $("imagePreview").src =
+          event.target.result;
+
+      }
+
+
+      if(
+        $("previewImageBox")
+      ){
+
+        $("previewImageBox")
+          .innerHTML =
+          `
+            <img
+              src="${event.target.result}"
+              alt="Preview"
+            >
+          `;
+
+      }
 
     };
+
 
   reader.readAsDataURL(
     file
@@ -1286,21 +2162,38 @@ function handleSelectedFile(
 }
 
 
-$("potholeImage")
+/* =========================================================
+   DRAG AND DROP
+========================================================= */
+
+$("uploadZone")
   ?.addEventListener(
-    "change",
-    event =>
-      handleSelectedFile(
-        event.target.files[0]
-      )
+    "dragover",
+    event => {
+
+      event.preventDefault();
+
+
+      $("uploadZone")
+        ?.classList.add(
+          "dragover"
+        );
+
+    }
   );
 
 
 $("uploadZone")
   ?.addEventListener(
-    "dragover",
-    event =>
-      event.preventDefault()
+    "dragleave",
+    () => {
+
+      $("uploadZone")
+        ?.classList.remove(
+          "dragover"
+        );
+
+    }
   );
 
 
@@ -1311,6 +2204,13 @@ $("uploadZone")
 
       event.preventDefault();
 
+
+      $("uploadZone")
+        ?.classList.remove(
+          "dragover"
+        );
+
+
       handleSelectedFile(
         event.dataTransfer.files[0]
       );
@@ -1320,237 +2220,8 @@ $("uploadZone")
 
 
 /* =========================================================
-   POTHOLE SEVERITY
+   REPORT PREVIEW
 ========================================================= */
-
-function potholeDepthScore(
-  value
-){
-
-  return {
-    "Less than 2 cm":1,
-    "2–5 cm":2,
-    "5–10 cm":3,
-    "10–20 cm":4,
-    "More than 20 cm":5
-  }[
-    value
-  ] || 0;
-
-}
-
-
-function potholeSizeScore(
-  value
-){
-
-  return {
-    "Small (< 0.25 m²)":1,
-    "Medium (0.25–1 m²)":2,
-    "Large (1–2.5 m²)":3,
-    "Very large (> 2.5 m²)":4
-  }[
-    value
-  ] || 0;
-
-}
-
-
-function calculateSeverity(
-  depth,
-  size
-){
-
-  if(
-    !depth ||
-    !size
-  ){
-
-    return {
-      grade:
-        "SELECT DATA",
-
-      className:
-        "none",
-
-      message:
-        "Select both depth and size to calculate severity."
-    };
-
-  }
-
-  const score =
-    potholeDepthScore(
-      depth
-    )
-    +
-    potholeSizeScore(
-      size
-    );
-
-  if(
-    score <= 2
-  ){
-
-    return {
-      grade:
-        "LOW",
-
-      className:
-        "low",
-
-      message:
-        "Small/shallow pothole. Lower immediate road impact."
-    };
-
-  }
-
-  if(
-    score <= 4
-  ){
-
-    return {
-      grade:
-        "MODERATE",
-
-      className:
-        "moderate",
-
-      message:
-        "Moderate defect. Repair should be scheduled."
-    };
-
-  }
-
-  if(
-    score <= 6
-  ){
-
-    return {
-      grade:
-        "HIGH",
-
-      className:
-        "high",
-
-      message:
-        "Large/deep defect. Priority repair is recommended for the RHMS workflow."
-    };
-
-  }
-
-  return {
-    grade:
-      "CRITICAL",
-
-    className:
-      "critical",
-
-    message:
-      "Very large/deep defect. Treat as the highest-priority RHMS field alert."
-  };
-
-}
-
-
-function updatePotholeAssessment(){
-
-  const isPothole =
-    $("problemType")?.value ===
-    "Pothole";
-
-  const box =
-    $("potholeMeasurements");
-
-  const depth =
-    $("potholeDepth")?.value ||
-    "";
-
-  const size =
-    $("potholeSize")?.value ||
-    "";
-
-  if(box){
-
-    box.classList.toggle(
-      "hidden",
-      !isPothole
-    );
-
-  }
-
-  if(
-    !isPothole
-  ){
-
-    $("severityBadge").className =
-      "severity none";
-
-    setText(
-      "severityBadge",
-      "N/A"
-    );
-
-    setText(
-      "severityExplain",
-      "Severity grading is available for pothole reports."
-    );
-
-    setText(
-      "previewDepth",
-      "Depth: —"
-    );
-
-    setText(
-      "previewSize",
-      "Size: —"
-    );
-
-    setText(
-      "previewSeverity",
-      "Severity: N/A"
-    );
-
-    return;
-
-  }
-
-  const result =
-    calculateSeverity(
-      depth,
-      size
-    );
-
-  $("severityBadge").className =
-    `severity ${result.className}`;
-
-  setText(
-    "severityBadge",
-    result.grade
-  );
-
-  setText(
-    "severityExplain",
-    result.message
-  );
-
-  setText(
-    "previewDepth",
-    `Depth: ${depth || "—"}`
-  );
-
-  setText(
-    "previewSize",
-    `Size: ${size || "—"}`
-  );
-
-  setText(
-    "previewSeverity",
-    `Severity: ${result.grade}`
-  );
-
-}
-
 
 $("problemType")
   ?.addEventListener(
@@ -1561,8 +2232,6 @@ $("problemType")
         "previewType",
         $("problemType").value
       );
-
-      updatePotholeAssessment();
 
     }
   );
@@ -1583,19 +2252,9 @@ $("description")
   );
 
 
-$("potholeDepth")
-  ?.addEventListener(
-    "change",
-    updatePotholeAssessment
-  );
-
-
-$("potholeSize")
-  ?.addEventListener(
-    "change",
-    updatePotholeAssessment
-  );
-
+/* =========================================================
+   FORM STATUS
+========================================================= */
 
 function showFormStatus(
   message,
@@ -1605,22 +2264,27 @@ function showFormStatus(
   const status =
     $("reportStatus");
 
-  if(!status){
+
+  if(!status)
     return;
-  }
+
 
   status.textContent =
     message;
 
+
   status.className =
-    `form-status ${
-      error
-        ? "error"
-        : "success"
-    }`;
+    `
+      form-status
+      ${error ? "error" : "success"}
+    `;
 
 }
 
+
+/* =========================================================
+   GEOLOCATION
+========================================================= */
 
 function getLocation(){
 
@@ -1637,10 +2301,12 @@ function getLocation(){
 
   }
 
+
   setText(
     "locationText",
     "Detecting location…"
   );
+
 
   navigator
     .geolocation
@@ -1651,14 +2317,30 @@ function getLocation(){
         userLatitude =
           position.coords.latitude;
 
+
         userLongitude =
           position.coords.longitude;
 
-        $("latitude").value =
-          userLatitude;
 
-        $("longitude").value =
-          userLongitude;
+        if(
+          $("latitude")
+        ){
+
+          $("latitude").value =
+            userLatitude;
+
+        }
+
+
+        if(
+          $("longitude")
+        ){
+
+          $("longitude").value =
+            userLongitude;
+
+        }
+
 
         const text =
           `
@@ -1666,15 +2348,18 @@ function getLocation(){
             ${userLongitude.toFixed(6)}
           `.trim();
 
+
         setText(
           "locationText",
           text
         );
 
+
         setText(
           "previewLocation",
           `GPS ${text}`
         );
+
 
         showFormStatus(
           "Location captured."
@@ -1682,12 +2367,18 @@ function getLocation(){
 
       },
 
-      () => {
+      error => {
+
+        console.error(
+          error
+        );
+
 
         setText(
           "locationText",
           "Location permission denied"
         );
+
 
         showFormStatus(
           "Please allow location access, then try again.",
@@ -1697,9 +2388,14 @@ function getLocation(){
       },
 
       {
-        enableHighAccuracy:true,
-        timeout:12000,
-        maximumAge:0
+        enableHighAccuracy:
+          true,
+
+        timeout:
+          12000,
+
+        maximumAge:
+          0
       }
 
     );
@@ -1715,10 +2411,14 @@ $("locationBtn")
 
 
 /* =========================================================
-   SUBMIT REPORT
+   SUBMIT ROAD REPORT
 ========================================================= */
 
 async function submitReport(){
+
+  const button =
+    $("submitReportBtn");
+
 
   if(
     !selectedFile
@@ -1732,6 +2432,7 @@ async function submitReport(){
     return;
 
   }
+
 
   if(
     userLatitude === null ||
@@ -1747,41 +2448,22 @@ async function submitReport(){
 
   }
 
-  const isPothole =
-    $("problemType").value ===
-    "Pothole";
 
-  const depth =
-    $("potholeDepth").value;
+  if(button){
 
-  const size =
-    $("potholeSize").value;
+    button.disabled =
+      true;
 
-  if(
-    isPothole &&
-    (
-      !depth ||
-      !size
-    )
-  ){
-
-    showFormStatus(
-      "Please select pothole depth and size before submitting.",
-      true
-    );
-
-    return;
+    button.textContent =
+      "Uploading…";
 
   }
 
-  const button =
-    $("submitReportBtn");
 
-  button.disabled =
-    true;
+  showFormStatus(
+    "Uploading image to Supabase Storage…"
+  );
 
-  button.textContent =
-    "Uploading…";
 
   try{
 
@@ -1796,26 +2478,32 @@ async function submitReport(){
         .replace(
           /[^a-z0-9]/g,
           ""
-        ) ||
+        );
+
+
+    const safeExtension =
+      extension ||
       "jpg";
 
-    const randomId =
-      window.crypto &&
-      window.crypto.randomUUID
 
-        ? window.crypto.randomUUID()
+    const randomPart =
+      window.crypto &&
+      crypto.randomUUID
+
+        ? crypto.randomUUID()
 
         : Math.random()
             .toString(36)
             .slice(2);
 
+
     const fileName =
-      `
-        report-${Date.now()}-${randomId}.${extension}
-      `.replace(
-        /\s+/g,
-        ""
-      );
+      `report-${Date.now()}-${randomPart}.${safeExtension}`;
+
+
+    /* -------------------------------------------------------
+       STORAGE
+    ------------------------------------------------------- */
 
     const {
       error:
@@ -1842,9 +2530,8 @@ async function submitReport(){
           }
         );
 
-    if(
-      uploadError
-    ){
+
+    if(uploadError){
 
       throw new Error(
         `Storage upload failed: ${uploadError.message}`
@@ -1852,7 +2539,15 @@ async function submitReport(){
 
     }
 
-    const imageURL =
+
+    /* -------------------------------------------------------
+       PUBLIC URL
+    ------------------------------------------------------- */
+
+    const {
+      data:
+        publicData
+    } =
       supabaseClient
         .storage
         .from(
@@ -1860,13 +2555,15 @@ async function submitReport(){
         )
         .getPublicUrl(
           fileName
-        )
-        ?.data
-        ?.publicUrl;
+        );
 
-    if(
-      !imageURL
-    ){
+
+    const imageURL =
+      publicData &&
+      publicData.publicUrl;
+
+
+    if(!imageURL){
 
       throw new Error(
         "Supabase did not return an image URL."
@@ -1874,15 +2571,15 @@ async function submitReport(){
 
     }
 
-    const severity =
-      isPothole
 
-        ? calculateSeverity(
-            depth,
-            size
-          ).grade
+    showFormStatus(
+      "Image uploaded. Saving report…"
+    );
 
-        : "N/A";
+
+    /* -------------------------------------------------------
+       DATABASE
+    ------------------------------------------------------- */
 
     const payload = {
 
@@ -1896,31 +2593,21 @@ async function submitReport(){
         imageURL,
 
       problem_type:
-        $("problemType").value,
+        $("problemType")?.value ||
+        "Pothole",
 
       description:
-        $("description").value.trim(),
-
-      pothole_depth:
-        isPothole
-          ? depth
-          : null,
-
-      pothole_size:
-        isPothole
-          ? size
-          : null,
+        $("description")?.value.trim() ||
+        "",
 
       severity:
-
-        isPothole
-          ? severity
-          : "N/A",
+        "Unknown",
 
       status:
         "Pending"
 
     };
+
 
     const {
       error:
@@ -1934,9 +2621,8 @@ async function submitReport(){
           payload
         );
 
-    if(
-      databaseError
-    ){
+
+    if(databaseError){
 
       throw new Error(
         `Database insert failed: ${databaseError.message}`
@@ -1944,34 +2630,44 @@ async function submitReport(){
 
     }
 
+
     showFormStatus(
       "✓ Report submitted successfully."
     );
+
 
     showToast(
       "Report uploaded successfully",
       "success"
     );
 
+
     resetForm();
+
 
     await refreshReports();
 
+
     setTimeout(
       () => {
+
         showPage(
-          "reports"
+          "gallery"
         );
+
       },
       700
     );
 
   }
+
   catch(error){
 
     console.error(
+      "REPORT ERROR:",
       error
     );
+
 
     showFormStatus(
       error.message ||
@@ -1979,19 +2675,28 @@ async function submitReport(){
       true
     );
 
+
     showToast(
       "Report upload failed",
       "error"
     );
 
   }
+
   finally{
 
-    button.disabled =
-      false;
+    if(button){
 
-    button.textContent =
-      "Submit report →";
+      button.disabled =
+        false;
+
+      button.innerHTML =
+        `
+          Submit report
+          <span>→</span>
+        `;
+
+    }
 
   }
 
@@ -2005,131 +2710,308 @@ $("submitReportBtn")
   );
 
 
+/* =========================================================
+   RESET REPORT FORM
+========================================================= */
+
 function resetForm(){
 
   selectedFile =
     null;
 
+
   userLatitude =
     null;
+
 
   userLongitude =
     null;
 
-  $("potholeImage").value =
-    "";
 
-  $("description").value =
-    "";
+  if(
+    $("potholeImage")
+  ){
 
-  $("problemType").value =
-    "Pothole";
+    $("potholeImage").value =
+      "";
 
-  $("potholeDepth").value =
-    "";
+  }
 
-  $("potholeSize").value =
-    "";
 
-  $("latitude").value =
-    "";
+  if(
+    $("description")
+  ){
 
-  $("longitude").value =
-    "";
+    $("description").value =
+      "";
 
-  $("uploadZone")
-    .classList.remove(
-      "has-image"
-    );
+  }
 
-  setText(
-    "uploadTitle",
-    "Drop image here or click to browse"
-  );
 
-  $("previewImageBox")
-    .innerHTML =
-    "IMAGE PREVIEW";
+  if(
+    $("problemType")
+  ){
+
+    $("problemType").value =
+      "Pothole";
+
+  }
+
+
+  if(
+    $("latitude")
+  ){
+
+    $("latitude").value =
+      "";
+
+  }
+
+
+  if(
+    $("longitude")
+  ){
+
+    $("longitude").value =
+      "";
+
+  }
+
 
   setText(
     "locationText",
     "Location not captured"
   );
 
+
   setText(
     "previewType",
     "Pothole"
   );
+
 
   setText(
     "previewDescription",
     "No description yet"
   );
 
-  setText(
-    "previewDepth",
-    "Depth: —"
-  );
-
-  setText(
-    "previewSize",
-    "Size: —"
-  );
-
-  setText(
-    "previewSeverity",
-    "Severity: SELECT DATA"
-  );
 
   setText(
     "previewLocation",
     "Location pending"
   );
 
-  updatePotholeAssessment();
+
+  if(
+    $("imagePreview")
+  ){
+
+    $("imagePreview").src =
+      "";
+
+  }
+
+
+  $("uploadZone")
+    ?.classList.remove(
+      "has-preview"
+    );
+
+
+  setText(
+    "uploadTitle",
+    "Drop image here or click to browse"
+  );
+
+
+  if(
+    $("previewImageBox")
+  ){
+
+    $("previewImageBox")
+      .innerHTML =
+      "<span>IMAGE PREVIEW</span>";
+
+  }
 
 }
 
 
-updatePotholeAssessment();
+/* =========================================================
+   PIPE MONITORING
+========================================================= */
+
+const PIPE_ZONES_A =
+  [
+    "A1",
+    "A2",
+    "A3",
+    "A4"
+  ];
+
+
+const PIPE_ZONES_B =
+  [
+    "B1",
+    "B2",
+    "B3",
+    "B4"
+  ];
+
+
+const ALL_PIPE_ZONES =
+  [
+    ...PIPE_ZONES_A,
+    ...PIPE_ZONES_B
+  ];
+
+
+const GPIO_MAP =
+  {
+
+    A1:
+      13,
+
+    A2:
+      14,
+
+    A3:
+      18,
+
+    A4:
+      19,
+
+    B1:
+      21,
+
+    B2:
+      22,
+
+    B3:
+      25,
+
+    B4:
+      26
+
+  };
 
 
 /* =========================================================
-   PIPES
+   BUILD PIPE ZONES
+   Supports multiple HTML versions.
 ========================================================= */
 
-const zoneMap = {
-  A1:13,
-  A2:14,
-  A3:18,
-  A4:19,
-  B1:21,
-  B2:22,
-  B3:25,
-  B4:26
-};
+function getZoneContainer(
+  firstId,
+  secondId
+){
 
+  return $(
+    firstId
+  ) ||
+  $(
+    secondId
+  );
+
+}
+
+
+function buildZones(){
+
+  if(
+    pipeZonesBuilt
+  )
+    return;
+
+
+  const containerA =
+    getZoneContainer(
+      "zonesA",
+      "zonesABCD"
+    );
+
+
+  const containerB =
+    getZoneContainer(
+      "zonesB",
+      "zonesEFGH"
+    );
+
+
+  if(containerA){
+
+    containerA.innerHTML =
+      PIPE_ZONES_A
+        .map(
+          zone =>
+            zoneHTML(
+              zone
+            )
+        )
+        .join("");
+
+  }
+
+
+  if(containerB){
+
+    containerB.innerHTML =
+      PIPE_ZONES_B
+        .map(
+          zone =>
+            zoneHTML(
+              zone
+            )
+        )
+        .join("");
+
+  }
+
+
+  pipeZonesBuilt =
+    true;
+
+}
+
+
+/* =========================================================
+   ZONE HTML
+========================================================= */
 
 function zoneHTML(
   zone
 ){
 
+  const gpio =
+    GPIO_MAP[
+      zone
+    ];
+
+
   return `
     <div
-      class="zone"
+      class="zone normal"
       id="zone-${zone}"
     >
 
-      <b>
-        ${zone}
-      </b>
+      <div class="zone-head">
+
+        <b>
+          ${zone}
+        </b>
+
+        <i
+          class="zone-led"
+        ></i>
+
+      </div>
 
       <span>
         NORMAL
       </span>
 
       <small>
-        GPIO ${zoneMap[zone]}
+        GPIO ${gpio} · LIVE
       </small>
 
     </div>
@@ -2138,54 +3020,502 @@ function zoneHTML(
 }
 
 
-function buildZones(){
+/* =========================================================
+   NORMALIZE ZONE NAME
+========================================================= */
+
+function normalizeZoneName(
+  value
+){
+
+  const raw =
+    String(
+      value || ""
+    )
+      .trim()
+      .toUpperCase();
+
 
   if(
-    $("zonesA")
+    ALL_PIPE_ZONES
+      .includes(
+        raw
+      )
   ){
 
-    $("zonesA").innerHTML =
-      [
-        "A1",
-        "A2",
-        "A3",
-        "A4"
-      ]
-        .map(
-          zone =>
-            zoneHTML(
-              zone
-            )
-        )
-        .join("");
+    return raw;
 
   }
 
+
+  const cleaned =
+    raw
+      .replace(
+        /^ZONE\s*/,
+        ""
+      )
+      .replace(
+        /[^A-Z0-9]/g,
+        ""
+      );
+
+
   if(
-    $("zonesB")
+    ALL_PIPE_ZONES
+      .includes(
+        cleaned
+      )
   ){
 
-    $("zonesB").innerHTML =
-      [
+    return cleaned;
+
+  }
+
+
+  /*
+    Backwards compatibility if an older
+    ESP32 database row still uses A-H.
+  */
+
+  const legacy =
+    {
+
+      A:
+        "A1",
+
+      B:
+        "A2",
+
+      C:
+        "A3",
+
+      D:
+        "A4",
+
+      E:
         "B1",
+
+      F:
         "B2",
+
+      G:
         "B3",
+
+      H:
         "B4"
-      ]
-        .map(
-          zone =>
-            zoneHTML(
-              zone
-            )
+
+    };
+
+
+  return (
+    legacy[
+      cleaned
+    ] ||
+    ""
+  );
+
+}
+
+
+/* =========================================================
+   APPLY PIPE DATA
+========================================================= */
+
+function applyPipeData(
+  rows = []
+){
+
+  buildZones();
+
+
+  const states =
+    {};
+
+
+  ALL_PIPE_ZONES
+    .forEach(
+      zone => {
+
+        states[
+          zone
+        ] =
+          "NORMAL";
+
+      }
+    );
+
+
+  rows.forEach(
+    item => {
+
+      const zone =
+        normalizeZoneName(
+          item.zone
+        );
+
+
+      if(!zone)
+        return;
+
+
+      states[
+        zone
+      ] =
+        String(
+          item.status ||
+          ""
         )
-        .join("");
+          .toUpperCase() ===
+        "LEAK"
+
+          ? "LEAK"
+
+          : "NORMAL";
+
+    }
+  );
+
+
+  let leaks =
+    0;
+
+
+  const currentLeaks =
+    new Set();
+
+
+  ALL_PIPE_ZONES
+    .forEach(
+      zone => {
+
+        const element =
+          $(
+            `zone-${zone}`
+          );
+
+
+        if(!element)
+          return;
+
+
+        const isLeak =
+          states[
+            zone
+          ] ===
+          "LEAK";
+
+
+        element.classList.toggle(
+          "leak",
+          isLeak
+        );
+
+
+        element.classList.toggle(
+          "normal",
+          !isLeak
+        );
+
+
+        const statusText =
+          element.querySelector(
+            "span"
+          );
+
+
+        if(statusText){
+
+          statusText.textContent =
+            isLeak
+              ? "LEAK DETECTED"
+              : "NORMAL";
+
+        }
+
+
+        const led =
+          element.querySelector(
+            ".zone-led"
+          );
+
+
+        if(led){
+
+          led.classList.toggle(
+            "leak",
+            isLeak
+          );
+
+        }
+
+
+        if(isLeak){
+
+          leaks++;
+
+          currentLeaks.add(
+            zone
+          );
+
+        }
+
+      }
+    );
+
+
+  /* -------------------------------------------------------
+     MAIN LEAK COUNTER
+  ------------------------------------------------------- */
+
+  setText(
+    "activeLeaks",
+    leaks
+  );
+
+
+  /* -------------------------------------------------------
+     PIPE A / PIPE B
+  ------------------------------------------------------- */
+
+  const leaksA =
+    PIPE_ZONES_A
+      .filter(
+        zone =>
+          states[
+            zone
+          ] ===
+          "LEAK"
+      )
+      .length;
+
+
+  const leaksB =
+    PIPE_ZONES_B
+      .filter(
+        zone =>
+          states[
+            zone
+          ] ===
+          "LEAK"
+      )
+      .length;
+
+
+  updatePipeGroup(
+    "A",
+    leaksA
+  );
+
+
+  updatePipeGroup(
+    "B",
+    leaksB
+  );
+
+
+  /* -------------------------------------------------------
+     ALERT
+  ------------------------------------------------------- */
+
+  updatePipeAlert(
+    currentLeaks
+  );
+
+
+  /* -------------------------------------------------------
+     LAST UPDATE
+  ------------------------------------------------------- */
+
+  setText(
+    "lastPipePoll",
+    formatTime()
+  );
+
+
+  setText(
+    "pipeLastUpdate",
+    `Updated ${formatTime()}`
+  );
+
+}
+
+
+/* =========================================================
+   PIPE GROUP UI
+========================================================= */
+
+function updatePipeGroup(
+  group,
+  leakCount
+){
+
+  const state =
+    $(
+      `pipe${group}State`
+    );
+
+
+  const line =
+    $(
+      `pipe${group}`
+    );
+
+
+  if(state){
+
+    state.textContent =
+      leakCount > 0
+
+        ? `${leakCount} ACTIVE`
+
+        : "STABLE";
+
+
+    state.classList.toggle(
+      "bad",
+      leakCount > 0
+    );
+
+  }
+
+
+  if(line){
+
+    line.classList.toggle(
+      "bad",
+      leakCount > 0
+    );
+
+  }
+
+
+  const card =
+    state?.closest(
+      ".pipe-card-peak"
+    );
+
+
+  if(card){
+
+    card.classList.toggle(
+      "is-alert",
+      leakCount > 0
+    );
 
   }
 
 }
 
 
+/* =========================================================
+   PIPE ALERT
+========================================================= */
+
+function updatePipeAlert(
+  currentLeaks
+){
+
+  const alert =
+    $("pipeAlert");
+
+
+  if(
+    !alert
+  ){
+
+    previousLeakZones =
+      new Set(
+        currentLeaks
+      );
+
+    return;
+
+  }
+
+
+  if(
+    currentLeaks.size === 0
+  ){
+
+    alert.classList.remove(
+      "show"
+    );
+
+
+    previousLeakZones =
+      new Set();
+
+
+    return;
+
+  }
+
+
+  const leakingZones =
+    [
+      ...currentLeaks
+    ];
+
+
+  setText(
+    "pipeAlertTitle",
+    "PIPELINE LEAK DETECTED"
+  );
+
+
+  setText(
+    "pipeAlertText",
+    `${leakingZones.join(
+      ", "
+    )} reporting active leakage.`
+  );
+
+
+  alert.classList.add(
+    "show"
+  );
+
+
+  const newLeaks =
+    leakingZones.filter(
+      zone =>
+        !previousLeakZones
+          .has(
+            zone
+          )
+    );
+
+
+  if(
+    newLeaks.length
+  ){
+
+    showToast(
+      `${newLeaks.join(
+        ", "
+      )} — leakage detected.`,
+      "error"
+    );
+
+  }
+
+
+  previousLeakZones =
+    new Set(
+      currentLeaks
+    );
+
+}
+
+
+/* =========================================================
+   LOAD PIPE STATUS
+========================================================= */
+
 async function loadPipeStatus(){
+
+  buildZones();
+
 
   try{
 
@@ -2194,163 +3524,87 @@ async function loadPipeStatus(){
       error
     } =
       await supabaseClient
+
         .from(
           "pipe_status"
         )
+
         .select(
-          "zone,status"
+          "*"
         );
 
-    if(
-      error
-    ){
 
-      throw error;
+    if(error){
+
+      console.warn(
+        "pipe_status error:",
+        error.message
+      );
+
+
+      setText(
+        "pipeConnection",
+        "TABLE ERROR"
+      );
+
+
+      if(
+        $("pipeConnection")
+      ){
+
+        $("pipeConnection")
+          .className =
+          "status-badge";
+
+      }
+
+
+      setText(
+        "activeLeaks",
+        "—"
+      );
+
+
+      setText(
+        "lastPipePoll",
+        "ERROR"
+      );
+
+
+      return;
 
     }
 
-    const leaks = [];
-
-    (
-      data ||
-      []
-    )
-      .forEach(
-        row => {
-
-          const raw =
-            String(
-              row.zone ||
-              ""
-            )
-              .toUpperCase();
-
-          const normalized =
-            {
-              A:"A1",
-              B:"A2",
-              C:"A3",
-              D:"A4",
-              E:"B1",
-              F:"B2",
-              G:"B3",
-              H:"B4"
-            }[
-              raw
-            ] ||
-            raw;
-
-          const element =
-            $(
-              `zone-${normalized}`
-            );
-
-          if(!element){
-            return;
-          }
-
-          const leak =
-            String(
-              row.status ||
-              ""
-            )
-              .toUpperCase() ===
-            "LEAK";
-
-          element.className =
-            `zone ${
-              leak
-                ? "leak"
-                : ""
-            }`;
-
-          const text =
-            element.querySelector(
-              "span"
-            );
-
-          if(text){
-            text.textContent =
-              leak
-                ? "LEAK"
-                : "NORMAL";
-          }
-
-          if(leak){
-            leaks.push(
-              normalized
-            );
-          }
-
-        }
-      );
 
     setText(
       "pipeConnection",
       "LIVE"
     );
 
-    setText(
-      "lastPipePoll",
-      formatTime()
-    );
 
-    setText(
-      "activeLeaks",
-      leaks.length
-    );
+    if(
+      $("pipeConnection")
+    ){
 
-    setText(
-      "pipeAState",
-      leaks.some(
-        zone =>
-          zone.startsWith(
-            "A"
-          )
-      )
-        ? "ALERT"
-        : "STABLE"
-    );
+      $("pipeConnection")
+        .className =
+        "status-badge online";
 
-    setText(
-      "pipeBState",
-      leaks.some(
-        zone =>
-          zone.startsWith(
-            "B"
-          )
-      )
-        ? "ALERT"
-        : "STABLE"
-    );
+    }
 
-    $("pipeAlert")
-      .classList.toggle(
-        "show",
-        leaks.length >
-        0
-      );
 
-    setText(
-      "pipeAlertTitle",
-      leaks.length
-        ? "PIPELINE LEAK DETECTED"
-        : "PIPELINE ALERT"
-    );
-
-    setText(
-      "pipeAlertText",
-      leaks.length
-        ? `${leaks.join(", ")} reporting active leakage.`
-        : "All zones normal."
+    applyPipeData(
+      data || []
     );
 
   }
   catch(error){
 
     console.error(
+      "PIPE FETCH ERROR:",
       error
     );
+
 
     setText(
       "pipeConnection",
@@ -2363,1014 +3617,1016 @@ async function loadPipeStatus(){
 
 
 /* =========================================================
-   CAMERA
+   CLOUD CAMERA
 ========================================================= */
 
 async function loadLatestCamera(){
 
-  try{
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(
-          "camera_frames"
-        )
-        .select(
-          "image_url,captured_at,device_id"
-        )
-        .order(
-          "captured_at",
-          {
-            ascending:false
-          }
-        )
-        .limit(
-          1
-        );
-
-    if(
-      error
-    ){
-
-      throw error;
-
-    }
-
-    if(
-      !data ||
-      !data.length
-    ){
-
-      setText(
-        "cameraStatus",
-        "WAITING"
-      );
-
-      setText(
-        "cameraCloudState",
-        "WAITING"
-      );
-
-      return;
-
-    }
-
-    const row =
-      data[0];
-
-    const url =
-      getImageURL(
-        row.image_url,
-        "camera-images"
-      );
-
-    const image =
-      $("cameraStream");
-
-    if(url){
-
-      image.src =
-        url;
-
-      image.style.display =
-        "block";
-
-      $("cameraPlaceholder")
-        .style.display =
-        "none";
-
-      setText(
-        "cameraStatus",
-        "LIVE"
-      );
-
-    }
-    else{
-
-      setText(
-        "cameraStatus",
-        "NO IMAGE"
-      );
-
-    }
-
-    setText(
-      "cameraCloudState",
-      "LATEST FRAME"
-    );
-
-    setText(
-      "cameraCloudTime",
-      formatDate(
-        row.captured_at
-      )
-    );
-
-  }
-  catch(error){
-
-    console.error(
-      error
-    );
-
-    setText(
-      "cameraStatus",
-      "ERROR"
-    );
-
-    setText(
-      "cameraCloudState",
-      "DATABASE ERROR"
-    );
-
-  }
-
-}
+  const image =
+    $("cameraStream");
 
 
-$("refreshCameraBtn")
-  ?.addEventListener(
-    "click",
-    loadLatestCamera
-  );
+  const status =
+    $("cameraStatus");
 
 
-/* =========================================================
-   MARG DRISHTI
-========================================================= */
+  const connection =
+    $("cameraConnection");
 
-function margClass(
-  condition
-){
 
-  const value =
-    String(
-      condition ||
-      ""
-    )
-      .toUpperCase();
+  const cloudState =
+    $("cameraCloudState");
+
+
+  const cloudTime =
+    $("cameraCloudTime");
+
 
   if(
-    value ===
-    "NORMAL ROAD"
+    !image
   ){
-    return "normal";
-  }
-
-  if(
-    value ===
-    "SPEED BREAKER"
-  ){
-    return "breaker";
-  }
-
-  if(
-    value ===
-    "POTHOLE"
-  ){
-    return "pothole";
-  }
-
-  if(
-    value ===
-    "ROUGH SURFACE"
-  ){
-    return "rough";
-  }
-
-  if(
-    value ===
-    "VEHICLE STATIONARY"
-  ){
-    return "stationary";
-  }
-
-  return "unknown";
-
-}
-
-
-function margIcon(
-  condition
-){
-
-  const value =
-    String(
-      condition ||
-      ""
-    )
-      .toUpperCase();
-
-  if(
-    value ===
-    "NORMAL ROAD"
-  ){
-    return "✓";
-  }
-
-  if(
-    value ===
-    "SPEED BREAKER"
-  ){
-    return "▲";
-  }
-
-  if(
-    value ===
-    "POTHOLE"
-  ){
-    return "⚠";
-  }
-
-  if(
-    value ===
-    "ROUGH SURFACE"
-  ){
-    return "≈";
-  }
-
-  if(
-    value ===
-    "VEHICLE STATIONARY"
-  ){
-    return "■";
-  }
-
-  return "◈";
-
-}
-
-
-function gpsLocation(
-  event
-){
-
-  if(
-    event?.gps_valid !== true ||
-    event.latitude == null ||
-    event.longitude == null
-  ){
-
-    return "NO FIX";
-
-  }
-
-  return `
-    ${Number(
-      event.latitude
-    ).toFixed(6)},
-    ${Number(
-      event.longitude
-    ).toFixed(6)}
-  `
-    .replace(
-      /\s+/g,
-      " "
-    )
-    .trim();
-
-}
-
-
-function gpsSpeed(
-  event
-){
-
-  if(
-    event?.gps_valid !== true ||
-    event.gps_speed_kmph == null
-  ){
-
-    return "—";
-
-  }
-
-  return `
-    ${Number(
-      event.gps_speed_kmph
-    ).toFixed(1)}
-    km/h
-  `
-    .replace(
-      /\s+/g,
-      " "
-    )
-    .trim();
-
-}
-
-
-function gpsStatus(
-  event
-){
-
-  if(
-    !event?.gps_valid
-  ){
-
-    return "NO FIX";
-
-  }
-
-  const satellites =
-    Number(
-      event.gps_satellites ||
-      0
-    );
-
-  return satellites
-    ? `FIXED · ${satellites} SAT`
-    : "FIXED";
-
-}
-
-
-function margDeviceState(
-  event
-){
-
-  if(!event){
-
-    return {
-      state:"error",
-      text:"Waiting for device data"
-    };
-
-  }
-
-  const age =
-    Date.now() -
-    new Date(
-      event.created_at
-    )
-      .getTime();
-
-  if(
-    age <= 15000
-  ){
-
-    return {
-      state:"online",
-      text:"Marg Drishti device online"
-    };
-
-  }
-
-  if(
-    age <= 30000
-  ){
-
-    return {
-      state:"stale",
-      text:"Device data is delayed"
-    };
-
-  }
-
-  return {
-    state:"error",
-    text:"Marg Drishti device offline"
-  };
-
-}
-
-
-function setMargConnection(
-  state,
-  text
-){
-
-  const chip =
-    $("mdConnectionChip");
-
-  const dot =
-    $("mdConnectionDot");
-
-  if(chip){
-
-    chip.className =
-      `badge ${
-        state === "online"
-          ? "online"
-          : state === "error"
-            ? "danger"
-            : ""
-      }`;
-
-    chip.textContent =
-      state === "online"
-        ? "LIVE"
-        : state.toUpperCase();
-
-  }
-
-  if(dot){
-
-    dot.className =
-      state === "online"
-        ? "online"
-        : state === "error"
-          ? "error"
-          : "";
-
-  }
-
-  setText(
-    "mdConnectionText",
-    text
-  );
-
-  setText(
-    "margDrishtiConnection",
-    state === "online"
-      ? "LIVE"
-      : state.toUpperCase()
-  );
-
-}
-
-
-async function loadMargDrishti(){
-
-  try{
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(
-          "marg_drishti_events"
-        )
-        .select(
-          `
-          id,
-          device_id,
-          condition,
-          vehicle_status,
-          confidence,
-          latitude,
-          longitude,
-          gps_speed_kmph,
-          gps_valid,
-          gps_satellites,
-          created_at
-          `
-        )
-        .order(
-          "created_at",
-          {
-            ascending:false
-          }
-        )
-        .limit(
-          50
-        );
-
-    if(
-      error
-    ){
-
-      throw error;
-
-    }
-
-    margDrishtiEvents =
-      data || [];
-
-    setText(
-      "mdDatabaseState",
-      "CONNECTED"
-    );
-
-    renderMargDrishti();
-
-  }
-  catch(error){
-
-    console.error(
-      error
-    );
-
-    setText(
-      "mdDatabaseState",
-      "ERROR"
-    );
-
-    setMargConnection(
-      "error",
-      "Database connection error"
-    );
-
-  }
-
-}
-
-
-function renderMargDrishti(){
-
-  const latest =
-    margDrishtiEvents[0];
-
-  if(!latest){
-
-    setText(
-      "mdCurrentCondition",
-      "WAITING FOR DATA"
-    );
-
-    setText(
-      "mdConditionTag",
-      "NO EVENT"
-    );
-
-    setText(
-      "mdVehicleStatus",
-      "—"
-    );
-
-    setText(
-      "mdConfidence",
-      "—"
-    );
-
-    setText(
-      "mdGpsLocation",
-      "NO FIX"
-    );
-
-    setText(
-      "mdGpsSpeed",
-      "—"
-    );
-
-    setText(
-      "mdDeviceId",
-      "—"
-    );
-
-    setText(
-      "mdLastUpdate",
-      "—"
-    );
-
-    setText(
-      "mdHistoryCount",
-      "0 EVENTS"
-    );
 
     return;
 
   }
 
-  const condition =
-    String(
-      latest.condition ||
-      "UNKNOWN"
-    )
-      .toUpperCase();
 
-  const conditionClass =
-    margClass(
-      condition
+  try{
+
+    if(cloudState){
+
+      cloudState.textContent =
+        "CONNECTING TO CAMERA";
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+
+        .from(
+          "camera_frames"
+        )
+
+        .select(
+          "image_url,captured_at,device_id"
+        )
+
+        .order(
+          "captured_at",
+          {
+            ascending:
+              false
+          }
+        )
+
+        .limit(
+          1
+        );
+
+
+    if(error){
+
+      throw error;
+
+    }
+
+
+    /* -------------------------------------------------------
+       NO FRAME
+    ------------------------------------------------------- */
+
+    if(
+      !data ||
+      data.length === 0
+    ){
+
+      image.style.display =
+        "none";
+
+
+      if(status){
+
+        status.textContent =
+          "WAITING";
+
+
+        status.className =
+          "status-badge";
+
+      }
+
+
+      setText(
+        "cameraConnection",
+        "NO CAMERA IMAGE YET"
+      );
+
+
+      setText(
+        "cameraCloudState",
+        "WAITING FOR ESP32-CAM"
+      );
+
+
+      setText(
+        "cameraCloudTime",
+        "No frame has been uploaded yet."
+      );
+
+
+      return;
+
+    }
+
+
+    const frame =
+      data[0];
+
+
+    if(
+      !frame.image_url
+    ){
+
+      throw new Error(
+        "Camera image URL is empty."
+      );
+
+    }
+
+
+    /*
+      Add a timestamp to avoid browser cache.
+    */
+
+    const baseURL =
+      getCameraImageURL(
+        frame.image_url
+      );
+
+
+    if(!baseURL){
+
+      throw new Error(
+        "Could not build camera image URL."
+      );
+
+    }
+
+
+    const imageURL =
+      baseURL +
+      (
+        baseURL.includes(
+          "?"
+        )
+          ? "&"
+          : "?"
+      ) +
+      "t=" +
+      Date.now();
+
+
+    /* -------------------------------------------------------
+       IMAGE LOAD SUCCESS
+    ------------------------------------------------------- */
+
+    image.onload =
+      () => {
+
+        image.style.display =
+          "block";
+
+
+        if(status){
+
+          status.textContent =
+            "ONLINE";
+
+
+          status.className =
+            "status-badge online";
+
+        }
+
+
+        setText(
+          "cameraConnection",
+          "ESP32-CAM IMAGE LIVE"
+        );
+
+
+        setText(
+          "cameraCloudState",
+          "CAMERA ONLINE"
+        );
+
+
+        if(
+          frame.captured_at
+        ){
+
+          const captureDate =
+            new Date(
+              frame.captured_at
+            );
+
+
+          if(
+            cloudTime
+          ){
+
+            cloudTime.textContent =
+              "Last capture · " +
+              captureDate
+                .toLocaleString(
+                  "en-IN",
+                  {
+                    day:
+                      "2-digit",
+
+                    month:
+                      "short",
+
+                    year:
+                      "numeric",
+
+                    hour:
+                      "2-digit",
+
+                    minute:
+                      "2-digit",
+
+                    second:
+                      "2-digit"
+                  }
+                );
+
+          }
+
+        }
+
+      };
+
+
+    /* -------------------------------------------------------
+       IMAGE LOAD ERROR
+    ------------------------------------------------------- */
+
+    image.onerror =
+      () => {
+
+        image.style.display =
+          "none";
+
+
+        if(status){
+
+          status.textContent =
+            "ERROR";
+
+
+          status.className =
+            "status-badge";
+
+        }
+
+
+        setText(
+          "cameraConnection",
+          "IMAGE COULD NOT LOAD"
+        );
+
+
+        setText(
+          "cameraCloudState",
+          "CAMERA IMAGE ERROR"
+        );
+
+
+        setText(
+          "cameraCloudTime",
+          "Check camera-images bucket permissions."
+        );
+
+      };
+
+
+    image.src =
+      imageURL;
+
+  }
+  catch(error){
+
+    console.error(
+      "CAMERA FETCH ERROR:",
+      error
     );
 
-  const panel =
-    $("mdStatusPanel");
 
-  if(panel){
+    image.style.display =
+      "none";
 
-    panel.dataset.condition =
-      conditionClass;
+
+    if(status){
+
+      status.textContent =
+        "ERROR";
+
+
+      status.className =
+        "status-badge";
+
+    }
+
+
+    setText(
+      "cameraConnection",
+      "CAMERA DATABASE ERROR"
+    );
+
+
+    setText(
+      "cameraCloudState",
+      "CAMERA CONNECTION ERROR"
+    );
+
+
+    setText(
+      "cameraCloudTime",
+      error.message ||
+      "Could not read camera_frames."
+    );
 
   }
 
-  setText(
-    "mdCurrentCondition",
-    condition
+}
+
+
+/* =========================================================
+   CAMERA REFRESH BUTTON
+========================================================= */
+
+$("refreshCameraBtn")
+  ?.addEventListener(
+    "click",
+    async () => {
+
+      showToast(
+        "Refreshing camera…"
+      );
+
+
+      await loadLatestCamera();
+
+
+      showToast(
+        "Camera updated",
+        "success"
+      );
+
+    }
   );
 
-  setText(
-    "mdConditionTag",
-    latest.vehicle_status ===
-      "VEHICLE STATIONARY"
 
-      ? "STATIONARY"
-      : "LIVE AI"
-  );
+/* =========================================================
+   LIGHTBOX
+========================================================= */
 
-  setText(
-    "mdConditionIcon",
-    margIcon(
-      condition
-    )
-  );
+function openLightbox(
+  src,
+  caption
+){
 
-  setText(
-    "mdVehicleStatus",
-    latest.vehicle_status ||
-    "—"
-  );
+  if(
+    $("lightboxImage")
+  ){
 
-  setText(
-    "mdConfidence",
-    latest.confidence == null
+    $("lightboxImage").src =
+      src;
 
-      ? "—"
+  }
 
-      : `${Number(
-          latest.confidence
-        ).toFixed(1)}%`
-  );
 
-  setText(
-    "mdGpsLocation",
-    gpsLocation(
-      latest
-    )
-  );
+  if(
+    $("lightboxCaption")
+  ){
 
-  setText(
-    "mdGpsSpeed",
-    gpsSpeed(
-      latest
-    )
-  );
+    $("lightboxCaption")
+      .textContent =
+      caption;
 
-  setText(
-    "mdDeviceId",
-    latest.device_id ||
-    "—"
-  );
+  }
 
-  setText(
-    "mdLastUpdate",
-    formatDate(
-      latest.created_at
-    )
-  );
 
-  setText(
-    "mdGpsConnectionState",
-    gpsStatus(
-      latest
-    )
-  );
-
-  const deviceState =
-    margDeviceState(
-      latest
+  $("lightbox")
+    ?.classList.add(
+      "open"
     );
 
-  setText(
-    "mdDeviceLinkState",
+}
 
-    deviceState.state ===
-      "online"
 
-      ? "ONLINE"
+$("closeLightbox")
+  ?.addEventListener(
+    "click",
+    () => {
 
-      : deviceState.state ===
-        "stale"
-
-        ? "STALE"
-
-        : "OFFLINE"
-  );
-
-  setMargConnection(
-    deviceState.state,
-    deviceState.text
-  );
-
-  setText(
-    "mdLiveMessage",
-
-    latest.gps_valid
-
-      ? `Latest AI result received with live GPS from ${
-          latest.device_id ||
-          "Marg Drishti"
-        }.`
-
-      : "Latest AI result received — GPS has no current fix."
-  );
-
-  const counts = {
-    normal:0,
-    breaker:0,
-    pothole:0,
-    rough:0,
-    stationary:0
-  };
-
-  margDrishtiEvents.forEach(
-    event => {
-
-      const key =
-        margClass(
-          event.condition
+      $("lightbox")
+        ?.classList.remove(
+          "open"
         );
 
+    }
+  );
+
+
+$("lightbox")
+  ?.addEventListener(
+    "click",
+    event => {
+
       if(
-        counts[key] !==
-        undefined
+        event.target ===
+        $("lightbox")
       ){
 
-        counts[key]++;
+        $("lightbox")
+          ?.classList.remove(
+            "open"
+          );
 
       }
 
     }
   );
 
-  setText(
-    "mdNormalCount",
-    counts.normal
-  );
 
-  setText(
-    "mdBreakerCount",
-    counts.breaker
-  );
+/* =========================================================
+   CINEMATIC BACKGROUND
+========================================================= */
 
-  setText(
-    "mdPotholeCount",
-    counts.pothole
-  );
+function setupCinematicBackground(){
 
-  setText(
-    "mdRoughCount",
-    counts.rough
-  );
+  const layers =
+    [
+      ...document
+        .querySelectorAll(
+          ".scene-layer"
+        )
+    ];
 
-  setText(
-    "mdStationaryCount",
-    counts.stationary
-  );
-
-  const history =
-    $("mdHistory");
-
-  history.innerHTML =
-    `
-      <div class="md-history-head">
-
-        <span>
-          CONDITION
-        </span>
-
-        <span>
-          TIME
-        </span>
-
-        <span>
-          DEVICE / GPS
-        </span>
-
-        <span>
-          CONFIDENCE
-        </span>
-
-      </div>
-    `
-
-    +
-
-    margDrishtiEvents
-      .map(
-        event => {
-
-          const condition =
-            String(
-              event.condition ||
-              "UNKNOWN"
-            )
-              .toUpperCase();
-
-          return `
-            <div class="md-event">
-
-              <div class="md-event-condition">
-
-                <i
-                  class="
-                    md-event-dot
-                    ${margClass(
-                      condition
-                    )}
-                  "
-                ></i>
-
-                <div>
-
-                  <strong>
-                    ${escapeHTML(
-                      condition
-                    )}
-                  </strong>
-
-                  <small>
-                    ${escapeHTML(
-                      event.vehicle_status ||
-                      "—"
-                    )}
-                  </small>
-
-                </div>
-
-              </div>
-
-              <div class="md-event-time">
-                ${escapeHTML(
-                  formatDate(
-                    event.created_at
-                  )
-                )}
-              </div>
-
-              <div class="md-event-device">
-
-                <span>
-                  ${escapeHTML(
-                    event.device_id ||
-                    "—"
-                  )}
-                </span>
-
-                <small>
-                  ${escapeHTML(
-                    gpsLocation(
-                      event
-                    )
-                  )}
-                </small>
-
-              </div>
-
-              <div class="md-event-confidence">
-
-                ${
-                  event.confidence == null
-                    ? "—"
-                    : `${Number(
-                        event.confidence
-                      ).toFixed(1)}%`
-                }
-
-              </div>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-
-  setText(
-    "mdHistoryCount",
-    `${margDrishtiEvents.length} EVENTS`
-  );
-
-}
-
-
-function setupMargRealtime(){
 
   if(
-    margChannel
+    !layers.length
   ){
 
     return;
 
   }
 
-  margChannel =
-    supabaseClient
 
-      .channel(
-        "marg-drishti-live"
-      )
+  const reduced =
+    window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-      .on(
-        "postgres_changes",
-        {
-          event:"INSERT",
-          schema:"public",
-          table:"marg_drishti_events"
-        },
-        () => {
-          loadMargDrishti();
-        }
-      )
 
-      .subscribe(
-        status => {
+  if(reduced)
+    return;
 
-          setText(
-            "mdRealtimeState",
-            status ===
-              "SUBSCRIBED"
 
-              ? "CONNECTED"
+  let active =
+    0;
 
-              : status
-          );
 
-        }
+  let targetX =
+    0;
+
+
+  let targetY =
+    0;
+
+
+  let currentX =
+    0;
+
+
+  let currentY =
+    0;
+
+
+  /* -------------------------------------------------------
+     SCENE CROSSFADE
+  ------------------------------------------------------- */
+
+  setInterval(
+    () => {
+
+      layers[
+        active
+      ].classList.remove(
+        "active"
       );
+
+
+      active =
+        (
+          active + 1
+        )
+        %
+        layers.length;
+
+
+      layers[
+        active
+      ].classList.add(
+        "active"
+      );
+
+    },
+    9000
+  );
+
+
+  /* -------------------------------------------------------
+     CURSOR PARALLAX
+  ------------------------------------------------------- */
+
+  window.addEventListener(
+    "mousemove",
+    event => {
+
+      targetX =
+        (
+          event.clientX /
+          window.innerWidth -
+          0.5
+        ) *
+        10;
+
+
+      targetY =
+        (
+          event.clientY /
+          window.innerHeight -
+          0.5
+        ) *
+        7;
+
+    },
+    {
+      passive:
+        true
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     SMOOTH PARALLAX
+  ------------------------------------------------------- */
+
+  function animateParallax(){
+
+    currentX +=
+      (
+        targetX -
+        currentX
+      ) *
+      0.035;
+
+
+    currentY +=
+      (
+        targetY -
+        currentY
+      ) *
+      0.035;
+
+
+    layers.forEach(
+      (
+        layer,
+        index
+      ) => {
+
+        const depth =
+          1 +
+          index *
+          0.15;
+
+
+        layer.style.transform =
+          `
+            scale(
+              ${1.03 +
+                index *
+                0.005}
+            )
+
+            translate3d(
+              ${currentX *
+                depth}px,
+
+              ${currentY *
+                depth}px,
+
+              0
+            )
+          `;
+
+      }
+    );
+
+
+    requestAnimationFrame(
+      animateParallax
+    );
+
+  }
+
+
+  requestAnimationFrame(
+    animateParallax
+  );
+
 
 }
 
-
-$("refreshMargDrishti")
-  ?.addEventListener(
-    "click",
-    loadMargDrishti
-  );
 
 
 /* =========================================================
-   GLOBAL REALTIME
+   MARG DRISHTI
 ========================================================= */
 
-async function setupRealtime(){
+function margConditionClass(condition){
+  const value = String(condition || "").toUpperCase().trim();
+  if(value === "NORMAL ROAD") return "normal";
+  if(value === "SPEED BREAKER") return "breaker";
+  if(value === "POTHOLE") return "pothole";
+  if(value === "ROUGH SURFACE") return "rough";
+  if(value === "VEHICLE STATIONARY") return "stationary";
+  return "unknown";
+}
+
+function margConditionIcon(condition){
+  const value = String(condition || "").toUpperCase().trim();
+  if(value === "NORMAL ROAD") return "✓";
+  if(value === "SPEED BREAKER") return "▲";
+  if(value === "POTHOLE") return "⚠";
+  if(value === "ROUGH SURFACE") return "≈";
+  if(value === "VEHICLE STATIONARY") return "■";
+  return "◈";
+}
+
+function margConnectionState(state, message){
+  const chip = $("mdConnectionChip");
+  const dot = $("mdConnectionDot");
+  const text = $("mdConnectionText");
+  const badge = $("margDrishtiConnection");
+
+  if(chip){
+    chip.className = "md-online-chip";
+    chip.textContent = state.toUpperCase();
+    if(state === "online") chip.classList.add("online");
+    if(state === "error") chip.classList.add("error");
+  }
+
+  if(dot){
+    dot.className = "md-live-dot";
+    if(state === "online") dot.classList.add("online");
+    if(state === "error") dot.classList.add("error");
+  }
+
+  if(text) text.textContent = message;
+
+  if(badge){
+    badge.textContent = state === "online" ? "LIVE" : state.toUpperCase();
+    badge.classList.toggle("online", state === "online");
+  }
+}
+
+async function loadMargDrishti(){
+  const dbState = $("mdDatabaseState");
+  if(dbState) dbState.textContent = "CHECKING";
+
+  try{
+    const { data, error } = await supabaseClient
+      .from("marg_drishti_events")
+      .select("id,device_id,condition,vehicle_status,confidence,created_at")
+      .order("created_at", { ascending:false })
+      .limit(50);
+
+    if(error) throw error;
+
+    margDrishtiEvents = data || [];
+    if(dbState) dbState.textContent = "CONNECTED";
+    margConnectionState("online", "Receiving live detections");
+    renderMargDrishti();
+  }catch(error){
+    console.error("MARG DRISHTI LOAD ERROR:", error);
+    if(dbState) dbState.textContent = "ERROR";
+    margConnectionState("error", "Database connection error");
+    renderMargDrishtiEmpty(error);
+  }
+}
+
+function renderMargDrishtiEmpty(error){
+  const history = $("mdHistory");
+  if(history){
+    history.innerHTML = `<div class="md-empty">Unable to load Marg Drishti data. Check the Supabase table and read policy.</div>`;
+  }
+  setText("mdHistoryCount", "0 EVENTS");
+  setText("mdCurrentCondition", "WAITING FOR DATA");
+  setText("mdConditionTag", "NO EVENT");
+  setText("mdVehicleStatus", "—");
+  setText("mdConfidence", "—");
+  setText("mdDeviceId", "—");
+  setText("mdLastUpdate", "—");
+  setText("mdLiveMessage", error ? "Database connection error." : "Waiting for the first Marg Drishti event…");
+}
+
+function renderMargDrishti(){
+  const latest = margDrishtiEvents[0];
+  const panel = $("mdStatusPanel");
+
+  if(!latest){
+    renderMargDrishtiEmpty(null);
+    updateMargDrishtiCounters();
+    return;
+  }
+
+  const condition = String(latest.condition || "UNKNOWN").toUpperCase();
+  const cls = margConditionClass(condition);
+
+  if(panel) panel.dataset.condition = cls;
+  setText("mdCurrentCondition", condition);
+  setText("mdConditionTag", latest.vehicle_status === "VEHICLE STATIONARY" ? "STATIONARY" : "LIVE AI");
+  setText("mdVehicleStatus", latest.vehicle_status || "—");
+  setText("mdDeviceId", latest.device_id || "—");
+  setText("mdLastUpdate", formatDate(latest.created_at));
+  setText("mdConditionIcon", margConditionIcon(condition));
+
+  if(latest.confidence === null || latest.confidence === undefined){
+    setText("mdConfidence", "—");
+  }else{
+    setText("mdConfidence", `${Number(latest.confidence).toFixed(1)}%`);
+  }
+
+  const liveMessage = latest.vehicle_status === "VEHICLE STATIONARY"
+    ? "Vehicle is currently stationary based on the 5-second acceleration window."
+    : `Latest AI result received from ${latest.device_id || "Marg Drishti"}.`;
+  setText("mdLiveMessage", liveMessage);
+
+  renderMargDrishtiHistory();
+  updateMargDrishtiCounters();
+}
+
+function renderMargDrishtiHistory(){
+  const box = $("mdHistory");
+  if(!box) return;
+
+  if(!margDrishtiEvents.length){
+    box.innerHTML = `<div class="md-empty">No detections have been received yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="md-history-head">
+      <span>CONDITION</span>
+      <span>TIME</span>
+      <span>DEVICE</span>
+      <span>CONFIDENCE</span>
+    </div>
+    ${margDrishtiEvents.slice(0,50).map(event => {
+      const condition = String(event.condition || "UNKNOWN").toUpperCase();
+      const cls = margConditionClass(condition);
+      const confidence = event.confidence === null || event.confidence === undefined
+        ? "—"
+        : `${Number(event.confidence).toFixed(1)}%`;
+      return `
+        <div class="md-event">
+          <div class="md-event-condition">
+            <span class="md-event-dot ${cls}"></span>
+            <div>
+              <strong>${escapeHTML(condition)}</strong>
+              <small>${escapeHTML(event.vehicle_status || "—")}</small>
+            </div>
+          </div>
+          <div class="md-event-time">${escapeHTML(formatDate(event.created_at))}</div>
+          <div class="md-event-device">${escapeHTML(event.device_id || "—")}</div>
+          <div class="md-event-confidence">${escapeHTML(confidence)}</div>
+        </div>
+      `;
+    }).join("")}
+  `;
+
+  setText("mdHistoryCount", `${margDrishtiEvents.length} EVENTS`);
+}
+
+function updateMargDrishtiCounters(){
+  const counts = { normal:0, breaker:0, pothole:0, rough:0, stationary:0 };
+  margDrishtiEvents.forEach(event => {
+    const cls = margConditionClass(event.condition);
+    if(Object.prototype.hasOwnProperty.call(counts, cls)) counts[cls]++;
+  });
+
+  setText("mdNormalCount", counts.normal);
+  setText("mdBreakerCount", counts.breaker);
+  setText("mdPotholeCount", counts.pothole);
+  setText("mdRoughCount", counts.rough);
+  setText("mdStationaryCount", counts.stationary);
+}
+
+function setupMargDrishtiRealtime(){
+  if(margDrishtiRealtimeChannel) return;
+
+  margDrishtiRealtimeChannel = supabaseClient
+    .channel("marg-drishti-live")
+    .on(
+      "postgres_changes",
+      { event:"*", schema:"public", table:"marg_drishti_events" },
+      payload => {
+        console.log("MARG DRISHTI REALTIME UPDATE:", payload);
+        setText("mdRealtimeState", "LIVE");
+        loadMargDrishti();
+      }
+    )
+    .subscribe(status => {
+      console.log("MARG DRISHTI REALTIME STATUS:", status);
+      setText("mdRealtimeState", status === "SUBSCRIBED" ? "CONNECTED" : status);
+      if(status === "SUBSCRIBED") margConnectionState("online", "Realtime channel connected");
+    });
+}
+
+$('refreshMargDrishti')?.addEventListener('click', loadMargDrishti);
+
+/* =========================================================
+   SUPABASE REALTIME
+========================================================= */
+
+function setupRealtime(){
 
   if(
-    reportChannel
+    realtimeChannel
   ){
 
-    return;
+    return realtimeChannel;
 
   }
 
-  reportChannel =
+
+  realtimeChannel =
     supabaseClient
-
       .channel(
-        "rhms-reports"
-      )
+        "rhms-live-updates"
+      );
 
-      .on(
-        "postgres_changes",
-        {
-          event:"*",
-          schema:"public",
-          table:"pothole_reports"
-        },
-        () => {
-          refreshReports();
-        }
-      )
 
-      .subscribe();
+  /* -------------------------------------------------------
+     PIPE REALTIME
+  ------------------------------------------------------- */
 
-  pipeChannel =
-    supabaseClient
+  realtimeChannel.on(
+    "postgres_changes",
+    {
+      event:
+        "*",
 
-      .channel(
-        "rhms-pipes"
-      )
+      schema:
+        "public",
 
-      .on(
-        "postgres_changes",
-        {
-          event:"*",
-          schema:"public",
-          table:"pipe_status"
-        },
-        () => {
-          loadPipeStatus();
-        }
-      )
+      table:
+        "pipe_status"
+    },
+    payload => {
 
-      .subscribe();
+      console.log(
+        "PIPE REALTIME UPDATE:",
+        payload
+      );
 
-  cameraChannel =
-    supabaseClient
 
-      .channel(
-        "rhms-camera"
-      )
+      if(
+        payload.eventType ===
+        "DELETE"
+      ){
 
-      .on(
-        "postgres_changes",
-        {
-          event:"INSERT",
-          schema:"public",
-          table:"camera_frames"
-        },
-        () => {
-          loadLatestCamera();
-        }
-      )
+        loadPipeStatus();
 
-      .subscribe();
+      }
+      else{
 
-  setupMargRealtime();
+        /*
+          Instead of querying only the changed row,
+          fetch the complete current state so the UI
+          always represents every zone.
+        */
+
+        loadPipeStatus();
+
+      }
+
+
+      updateStatistics();
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     ROAD REPORT REALTIME
+  ------------------------------------------------------- */
+
+  realtimeChannel.on(
+    "postgres_changes",
+    {
+      event:
+        "*",
+
+      schema:
+        "public",
+
+      table:
+        "pothole_reports"
+    },
+    payload => {
+
+      console.log(
+        "REPORT REALTIME UPDATE:",
+        payload
+      );
+
+
+      refreshReports();
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     CAMERA REALTIME
+  ------------------------------------------------------- */
+
+  realtimeChannel.on(
+    "postgres_changes",
+    {
+      event:
+        "INSERT",
+
+      schema:
+        "public",
+
+      table:
+        "camera_frames"
+    },
+    payload => {
+
+      console.log(
+        "CAMERA REALTIME UPDATE:",
+        payload
+      );
+
+
+      loadLatestCamera();
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     SUBSCRIBE
+  ------------------------------------------------------- */
+
+  realtimeChannel.subscribe(
+    status => {
+
+      console.log(
+        "RHMS REALTIME STATUS:",
+        status
+      );
+
+
+      if(
+        status ===
+        "SUBSCRIBED"
+      ){
+
+        showToast(
+          "Live updates connected",
+          "success"
+        );
+
+      }
+
+    }
+  );
+
+
+  return realtimeChannel;
 
 }
 
@@ -3383,38 +4639,118 @@ async function init(){
 
   buildZones();
 
-  updatePotholeAssessment();
+
+  /* -------------------------------------------------------
+     SUPABASE KEY CHECK
+  ------------------------------------------------------- */
+
+  if(
+    !SUPABASE_KEY ||
+    SUPABASE_KEY.includes(
+      "PASTE_YOUR"
+    )
+  ){
+
+    setText(
+      "systemText",
+      "ADD SUPABASE KEY"
+    );
+
+
+    setText(
+      "dbStatus",
+      "NOT CONFIGURED"
+    );
+
+
+    setText(
+      "storageStatus",
+      "NOT CONFIGURED"
+    );
+
+
+    showToast(
+      "Add your Supabase publishable key in app.js",
+      "error"
+    );
+
+
+    return;
+
+  }
+
+
+  setText(
+    "storageStatus",
+    "READY"
+  );
+
+
+  /* -------------------------------------------------------
+     INITIAL DATA LOAD
+  ------------------------------------------------------- */
 
   await refreshReports();
 
+
   await loadPipeStatus();
+
 
   await loadLatestCamera();
 
   await loadMargDrishti();
 
-  await setupRealtime();
 
-  setInterval(
-    loadPipeStatus,
-    5000
-  );
+  /* -------------------------------------------------------
+     REALTIME
+  ------------------------------------------------------- */
 
-  setInterval(
-    loadLatestCamera,
-    10000
-  );
+  setupRealtime();
+  setupMargDrishtiRealtime();
 
-  setInterval(
-    refreshReports,
-    15000
-  );
 
-  setInterval(
-    loadMargDrishti,
-    5000
-  );
+  /* -------------------------------------------------------
+     FALLBACK POLLING
+  ------------------------------------------------------- */
+
+  pipePollingTimer =
+    setInterval(
+      loadPipeStatus,
+      5000
+    );
+
+
+  reportPollingTimer =
+    setInterval(
+      refreshReports,
+      15000
+    );
+
+
+  latestCameraTimer =
+    setInterval(
+      loadLatestCamera,
+      10000
+    );
+
+  margDrishtiPollingTimer =
+    setInterval(
+      loadMargDrishti,
+      5000
+    );
 
 }
+
+
+/* =========================================================
+   CINEMATIC BACKGROUND
+========================================================= */
+
+setupCinematicBackground();
+
+
+/* =========================================================
+   START RHMS
+========================================================= */
 
 init();
