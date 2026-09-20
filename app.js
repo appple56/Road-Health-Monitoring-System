@@ -4316,7 +4316,7 @@ async function loadMargDrishti(){
   try{
     const { data, error } = await supabaseClient
       .from("marg_drishti_events")
-      .select("id,device_id,condition,vehicle_status,confidence,created_at")
+      .select("id,device_id,condition,vehicle_status,confidence,latitude,longitude,gps_speed_kmph,gps_valid,gps_satellites,created_at")
       .order("created_at", { ascending:false })
       .limit(50);
 
