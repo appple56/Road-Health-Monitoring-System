@@ -82,6 +82,10 @@ let realtimeChannel = null;
 
 let previousLeakZones = new Set();
 
+let margDrishtiEvents = [];
+let margDrishtiPollingTimer = null;
+let margDrishtiRealtimeChannel = null;
+
 
 /* =========================================================
    PAGE TITLES
@@ -108,7 +112,10 @@ const pageTitles = {
     "Pipe Monitoring",
 
   visual:
-    "Visual Inspection"
+    "Visual Inspection",
+
+  "marg-drishti":
+    "Marg Drishti"
 
 };
 
@@ -606,6 +613,14 @@ function showPage(
   ){
 
     loadLatestCamera();
+
+  }
+
+  if(
+    pageId === "marg-drishti"
+  ){
+
+    loadMargDrishti();
 
   }
 
@@ -4242,6 +4257,213 @@ function setupCinematicBackground(){
 }
 
 
+
+/* =========================================================
+   MARG DRISHTI
+========================================================= */
+
+function margConditionClass(condition){
+  const value = String(condition || "").toUpperCase().trim();
+  if(value === "NORMAL ROAD") return "normal";
+  if(value === "SPEED BREAKER") return "breaker";
+  if(value === "POTHOLE") return "pothole";
+  if(value === "ROUGH SURFACE") return "rough";
+  if(value === "VEHICLE STATIONARY") return "stationary";
+  return "unknown";
+}
+
+function margConditionIcon(condition){
+  const value = String(condition || "").toUpperCase().trim();
+  if(value === "NORMAL ROAD") return "✓";
+  if(value === "SPEED BREAKER") return "▲";
+  if(value === "POTHOLE") return "⚠";
+  if(value === "ROUGH SURFACE") return "≈";
+  if(value === "VEHICLE STATIONARY") return "■";
+  return "◈";
+}
+
+function margConnectionState(state, message){
+  const chip = $("mdConnectionChip");
+  const dot = $("mdConnectionDot");
+  const text = $("mdConnectionText");
+  const badge = $("margDrishtiConnection");
+
+  if(chip){
+    chip.className = "md-online-chip";
+    chip.textContent = state.toUpperCase();
+    if(state === "online") chip.classList.add("online");
+    if(state === "error") chip.classList.add("error");
+  }
+
+  if(dot){
+    dot.className = "md-live-dot";
+    if(state === "online") dot.classList.add("online");
+    if(state === "error") dot.classList.add("error");
+  }
+
+  if(text) text.textContent = message;
+
+  if(badge){
+    badge.textContent = state === "online" ? "LIVE" : state.toUpperCase();
+    badge.classList.toggle("online", state === "online");
+  }
+}
+
+async function loadMargDrishti(){
+  const dbState = $("mdDatabaseState");
+  if(dbState) dbState.textContent = "CHECKING";
+
+  try{
+    const { data, error } = await supabaseClient
+      .from("marg_drishti_events")
+      .select("id,device_id,condition,vehicle_status,confidence,created_at")
+      .order("created_at", { ascending:false })
+      .limit(50);
+
+    if(error) throw error;
+
+    margDrishtiEvents = data || [];
+    if(dbState) dbState.textContent = "CONNECTED";
+    margConnectionState("online", "Receiving live detections");
+    renderMargDrishti();
+  }catch(error){
+    console.error("MARG DRISHTI LOAD ERROR:", error);
+    if(dbState) dbState.textContent = "ERROR";
+    margConnectionState("error", "Database connection error");
+    renderMargDrishtiEmpty(error);
+  }
+}
+
+function renderMargDrishtiEmpty(error){
+  const history = $("mdHistory");
+  if(history){
+    history.innerHTML = `<div class="md-empty">Unable to load Marg Drishti data. Check the Supabase table and read policy.</div>`;
+  }
+  setText("mdHistoryCount", "0 EVENTS");
+  setText("mdCurrentCondition", "WAITING FOR DATA");
+  setText("mdConditionTag", "NO EVENT");
+  setText("mdVehicleStatus", "—");
+  setText("mdConfidence", "—");
+  setText("mdDeviceId", "—");
+  setText("mdLastUpdate", "—");
+  setText("mdLiveMessage", error ? "Database connection error." : "Waiting for the first Marg Drishti event…");
+}
+
+function renderMargDrishti(){
+  const latest = margDrishtiEvents[0];
+  const panel = $("mdStatusPanel");
+
+  if(!latest){
+    renderMargDrishtiEmpty(null);
+    updateMargDrishtiCounters();
+    return;
+  }
+
+  const condition = String(latest.condition || "UNKNOWN").toUpperCase();
+  const cls = margConditionClass(condition);
+
+  if(panel) panel.dataset.condition = cls;
+  setText("mdCurrentCondition", condition);
+  setText("mdConditionTag", latest.vehicle_status === "VEHICLE STATIONARY" ? "STATIONARY" : "LIVE AI");
+  setText("mdVehicleStatus", latest.vehicle_status || "—");
+  setText("mdDeviceId", latest.device_id || "—");
+  setText("mdLastUpdate", formatDate(latest.created_at));
+  setText("mdConditionIcon", margConditionIcon(condition));
+
+  if(latest.confidence === null || latest.confidence === undefined){
+    setText("mdConfidence", "—");
+  }else{
+    setText("mdConfidence", `${Number(latest.confidence).toFixed(1)}%`);
+  }
+
+  const liveMessage = latest.vehicle_status === "VEHICLE STATIONARY"
+    ? "Vehicle is currently stationary based on the 5-second acceleration window."
+    : `Latest AI result received from ${latest.device_id || "Marg Drishti"}.`;
+  setText("mdLiveMessage", liveMessage);
+
+  renderMargDrishtiHistory();
+  updateMargDrishtiCounters();
+}
+
+function renderMargDrishtiHistory(){
+  const box = $("mdHistory");
+  if(!box) return;
+
+  if(!margDrishtiEvents.length){
+    box.innerHTML = `<div class="md-empty">No detections have been received yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="md-history-head">
+      <span>CONDITION</span>
+      <span>TIME</span>
+      <span>DEVICE</span>
+      <span>CONFIDENCE</span>
+    </div>
+    ${margDrishtiEvents.slice(0,50).map(event => {
+      const condition = String(event.condition || "UNKNOWN").toUpperCase();
+      const cls = margConditionClass(condition);
+      const confidence = event.confidence === null || event.confidence === undefined
+        ? "—"
+        : `${Number(event.confidence).toFixed(1)}%`;
+      return `
+        <div class="md-event">
+          <div class="md-event-condition">
+            <span class="md-event-dot ${cls}"></span>
+            <div>
+              <strong>${escapeHTML(condition)}</strong>
+              <small>${escapeHTML(event.vehicle_status || "—")}</small>
+            </div>
+          </div>
+          <div class="md-event-time">${escapeHTML(formatDate(event.created_at))}</div>
+          <div class="md-event-device">${escapeHTML(event.device_id || "—")}</div>
+          <div class="md-event-confidence">${escapeHTML(confidence)}</div>
+        </div>
+      `;
+    }).join("")}
+  `;
+
+  setText("mdHistoryCount", `${margDrishtiEvents.length} EVENTS`);
+}
+
+function updateMargDrishtiCounters(){
+  const counts = { normal:0, breaker:0, pothole:0, rough:0, stationary:0 };
+  margDrishtiEvents.forEach(event => {
+    const cls = margConditionClass(event.condition);
+    if(Object.prototype.hasOwnProperty.call(counts, cls)) counts[cls]++;
+  });
+
+  setText("mdNormalCount", counts.normal);
+  setText("mdBreakerCount", counts.breaker);
+  setText("mdPotholeCount", counts.pothole);
+  setText("mdRoughCount", counts.rough);
+  setText("mdStationaryCount", counts.stationary);
+}
+
+function setupMargDrishtiRealtime(){
+  if(margDrishtiRealtimeChannel) return;
+
+  margDrishtiRealtimeChannel = supabaseClient
+    .channel("marg-drishti-live")
+    .on(
+      "postgres_changes",
+      { event:"*", schema:"public", table:"marg_drishti_events" },
+      payload => {
+        console.log("MARG DRISHTI REALTIME UPDATE:", payload);
+        setText("mdRealtimeState", "LIVE");
+        loadMargDrishti();
+      }
+    )
+    .subscribe(status => {
+      console.log("MARG DRISHTI REALTIME STATUS:", status);
+      setText("mdRealtimeState", status === "SUBSCRIBED" ? "CONNECTED" : status);
+      if(status === "SUBSCRIBED") margConnectionState("online", "Realtime channel connected");
+    });
+}
+
+$('refreshMargDrishti')?.addEventListener('click', loadMargDrishti);
+
 /* =========================================================
    SUPABASE REALTIME
 ========================================================= */
@@ -4476,12 +4698,15 @@ async function init(){
 
   await loadLatestCamera();
 
+  await loadMargDrishti();
+
 
   /* -------------------------------------------------------
      REALTIME
   ------------------------------------------------------- */
 
   setupRealtime();
+  setupMargDrishtiRealtime();
 
 
   /* -------------------------------------------------------
@@ -4508,6 +4733,12 @@ async function init(){
       10000
     );
 
+  margDrishtiPollingTimer =
+    setInterval(
+      loadMargDrishti,
+      5000
+    );
+
 }
 
 
@@ -4523,698 +4754,3 @@ setupCinematicBackground();
 ========================================================= */
 
 init();
-/* =========================================================
-   MARG DRISHTI
-   ========================================================= */
-
-let margDrishtiPollingTimer = null;
-let margDrishtiRealtimeChannel = null;
-let margDrishtiEvents = [];
-
-
-/* ---------------------------------------------------------
-   HELPERS
---------------------------------------------------------- */
-
-function margConditionClass(condition){
-
-  const value =
-    String(condition || "")
-      .toUpperCase()
-      .trim();
-
-  if(value === "NORMAL ROAD"){
-    return "normal";
-  }
-
-  if(value === "SPEED BREAKER"){
-    return "breaker";
-  }
-
-  if(value === "POTHOLE"){
-    return "pothole";
-  }
-
-  if(value === "ROUGH SURFACE"){
-    return "rough";
-  }
-
-  if(value === "VEHICLE STATIONARY"){
-    return "stationary";
-  }
-
-  return "normal";
-
-}
-
-
-function margConditionIcon(condition){
-
-  const value =
-    String(condition || "")
-      .toUpperCase()
-      .trim();
-
-  if(value === "NORMAL ROAD"){
-    return "✓";
-  }
-
-  if(value === "SPEED BREAKER"){
-    return "▲";
-  }
-
-  if(value === "POTHOLE"){
-    return "⚠";
-  }
-
-  if(value === "ROUGH SURFACE"){
-    return "≈";
-  }
-
-  if(value === "VEHICLE STATIONARY"){
-    return "■";
-  }
-
-  return "◈";
-
-}
-
-
-/* ---------------------------------------------------------
-   LOAD EVENTS
---------------------------------------------------------- */
-
-async function loadMargDrishti(){
-
-  const connection =
-    $("margDrishtiConnection");
-
-  const connectionText =
-    $("mdConnectionText");
-
-  const connectionDot =
-    $("mdConnectionDot");
-
-  const databaseState =
-    $("mdDatabaseState");
-
-
-  try{
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-
-        .from("marg_drishti_events")
-
-        .select(
-          "id,device_id,condition,vehicle_status,confidence,created_at"
-        )
-
-        .order(
-          "created_at",
-          {
-            ascending:false
-          }
-        )
-
-        .limit(25);
-
-
-    if(error){
-
-      console.error(
-        "MARG DRISHTI FETCH ERROR:",
-        error
-      );
-
-
-      if(connection){
-        connection.textContent =
-          "DATABASE ERROR";
-      }
-
-
-      if(connectionText){
-        connectionText.textContent =
-          "Database error";
-      }
-
-
-      if(connectionDot){
-        connectionDot.className =
-          "md-live-dot error";
-      }
-
-
-      setText(
-        "mdRealtimeState",
-        "ERROR"
-      );
-
-
-      setText(
-        "mdDatabaseState",
-        "ERROR"
-      );
-
-
-      return;
-
-    }
-
-
-    margDrishtiEvents =
-      data || [];
-
-
-    if(connection){
-      connection.textContent =
-        "LIVE";
-      connection.classList.add(
-        "online"
-      );
-    }
-
-
-    if(connectionText){
-      connectionText.textContent =
-        "Connected";
-    }
-
-
-    if(connectionDot){
-      connectionDot.className =
-        "md-live-dot online";
-    }
-
-
-    setText(
-      "mdDatabaseState",
-      "CONNECTED"
-    );
-
-
-    renderMargDrishti();
-
-  }
-  catch(error){
-
-    console.error(
-      "MARG DRISHTI ERROR:",
-      error
-    );
-
-
-    if(connection){
-      connection.textContent =
-        "ERROR";
-    }
-
-
-    if(connectionText){
-      connectionText.textContent =
-        "Connection error";
-    }
-
-
-    if(connectionDot){
-      connectionDot.className =
-        "md-live-dot error";
-    }
-
-  }
-
-}
-
-
-/* ---------------------------------------------------------
-   RENDER CURRENT STATUS
---------------------------------------------------------- */
-
-function renderMargDrishti(){
-
-  const latest =
-    margDrishtiEvents[0];
-
-
-  const conditionEl =
-    $("mdCurrentCondition");
-
-  const iconEl =
-    $("mdConditionIcon");
-
-  const panel =
-    $("mdStatusPanel");
-
-
-  if(!latest){
-
-    setText(
-      "mdCurrentCondition",
-      "WAITING FOR DATA"
-    );
-
-    setText(
-      "mdVehicleStatus",
-      "—"
-    );
-
-    setText(
-      "mdConfidence",
-      "—"
-    );
-
-    setText(
-      "mdDeviceId",
-      "—"
-    );
-
-    setText(
-      "mdLastUpdate",
-      "—"
-    );
-
-    setText(
-      "mdHistory",
-      "No Marg Drishti events yet."
-    );
-
-    return;
-
-  }
-
-
-  const condition =
-    String(
-      latest.condition || "UNKNOWN"
-    ).toUpperCase();
-
-
-  const conditionClass =
-    margConditionClass(
-      condition
-    );
-
-
-  if(conditionEl){
-
-    conditionEl.textContent =
-      condition;
-
-    conditionEl.className =
-      `md-condition-${conditionClass}`;
-
-  }
-
-
-  if(iconEl){
-
-    iconEl.textContent =
-      margConditionIcon(
-        condition
-      );
-
-  }
-
-
-  if(panel){
-
-    panel.dataset.condition =
-      conditionClass;
-
-  }
-
-
-  setText(
-    "mdVehicleStatus",
-    latest.vehicle_status ||
-      "—"
-  );
-
-
-  if(
-    latest.confidence !== null &&
-    latest.confidence !== undefined
-  ){
-
-    setText(
-      "mdConfidence",
-      `${Number(latest.confidence).toFixed(1)}%`
-    );
-
-  }
-  else{
-
-    setText(
-      "mdConfidence",
-      "—"
-    );
-
-  }
-
-
-  setText(
-    "mdDeviceId",
-    latest.device_id ||
-      "—"
-  );
-
-
-  setText(
-    "mdLastUpdate",
-    formatDate(
-      latest.created_at
-    )
-  );
-
-
-  renderMargDrishtiHistory();
-
-
-  updateMargDrishtiCounters();
-
-}
-
-
-/* ---------------------------------------------------------
-   HISTORY
---------------------------------------------------------- */
-
-function renderMargDrishtiHistory(){
-
-  const box =
-    $("mdHistory");
-
-
-  if(!box){
-    return;
-  }
-
-
-  if(
-    !margDrishtiEvents.length
-  ){
-
-    box.innerHTML =
-      `
-      <div class="empty-state">
-        No Marg Drishti events yet.
-      </div>
-      `;
-
-    return;
-
-  }
-
-
-  box.innerHTML =
-    margDrishtiEvents
-      .map(
-        event => {
-
-          const condition =
-            String(
-              event.condition ||
-                "UNKNOWN"
-            ).toUpperCase();
-
-
-          const cls =
-            margConditionClass(
-              condition
-            );
-
-
-          const confidence =
-            event.confidence !== null &&
-            event.confidence !== undefined
-
-              ? `${Number(event.confidence).toFixed(1)}%`
-
-              : "—";
-
-
-          return `
-            <div class="md-event">
-
-              <div class="md-event-condition">
-
-                <span
-                  class="md-event-dot ${cls}"
-                ></span>
-
-                <div>
-
-                  <strong>
-                    ${escapeHTML(
-                      condition
-                    )}
-                  </strong>
-
-                  <span class="md-event-status">
-                    ${escapeHTML(
-                      event.vehicle_status ||
-                        "—"
-                    )}
-                  </span>
-
-                </div>
-
-              </div>
-
-
-              <div class="md-event-time">
-                ${escapeHTML(
-                  formatDate(
-                    event.created_at
-                  )
-                )}
-              </div>
-
-
-              <div class="md-event-device">
-                ${escapeHTML(
-                  event.device_id ||
-                    "Unknown device"
-                )}
-              </div>
-
-
-              <div class="md-event-confidence">
-                ${escapeHTML(
-                  confidence
-                )}
-              </div>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-
-}
-
-
-/* ---------------------------------------------------------
-   COUNTERS
---------------------------------------------------------- */
-
-function updateMargDrishtiCounters(){
-
-  const counts = {
-
-    normal:0,
-
-    breaker:0,
-
-    pothole:0,
-
-    rough:0,
-
-    stationary:0
-
-  };
-
-
-  margDrishtiEvents.forEach(
-    event => {
-
-      const cls =
-        margConditionClass(
-          event.condition
-        );
-
-
-      if(
-        Object.prototype.hasOwnProperty
-          .call(
-            counts,
-            cls
-          )
-      ){
-
-        counts[cls]++;
-
-      }
-
-    }
-  );
-
-
-  setText(
-    "mdNormalCount",
-    counts.normal
-  );
-
-
-  setText(
-    "mdBreakerCount",
-    counts.breaker
-  );
-
-
-  setText(
-    "mdPotholeCount",
-    counts.pothole
-  );
-
-
-  setText(
-    "mdRoughCount",
-    counts.rough
-  );
-
-
-  setText(
-    "mdStationaryCount",
-    counts.stationary
-  );
-
-}
-
-
-/* ---------------------------------------------------------
-   REALTIME
---------------------------------------------------------- */
-
-function setupMargDrishtiRealtime(){
-
-  if(
-    margDrishtiRealtimeChannel
-  ){
-
-    return;
-
-  }
-
-
-  margDrishtiRealtimeChannel =
-    supabaseClient
-
-      .channel(
-        "marg-drishti-live"
-      )
-
-      .on(
-        "postgres_changes",
-        {
-          event:"*",
-          schema:"public",
-          table:"marg_drishti_events"
-        },
-        payload => {
-
-          console.log(
-            "MARG DRISHTI REALTIME:",
-            payload
-          );
-
-
-          setText(
-            "mdRealtimeState",
-            "LIVE"
-          );
-
-
-          loadMargDrishti();
-
-          showToast(
-            "Marg Drishti updated",
-            "success"
-          );
-
-        }
-      )
-
-      .subscribe(
-        status => {
-
-          console.log(
-            "MARG DRISHTI REALTIME STATUS:",
-            status
-          );
-
-
-          if(
-            status === "SUBSCRIBED"
-          ){
-
-            setText(
-              "mdRealtimeState",
-              "CONNECTED"
-            );
-
-          }
-          else{
-
-            setText(
-              "mdRealtimeState",
-              status
-            );
-
-          }
-
-        }
-      );
-
-}
-
-
-/* ---------------------------------------------------------
-   REFRESH BUTTON
---------------------------------------------------------- */
-
-$("refreshMargDrishti")
-  ?.addEventListener(
-    "click",
-    () => {
-
-      loadMargDrishti();
-
-    }
-  );
-
-
-/* ---------------------------------------------------------
-   FIRST LOAD
---------------------------------------------------------- */
-
-loadMargDrishti();
-
-
-setupMargDrishtiRealtime();
-
-
-/* ---------------------------------------------------------
-   FALLBACK POLLING
---------------------------------------------------------- */
-
-margDrishtiPollingTimer =
-  setInterval(
-    loadMargDrishti,
-    5000
-  );
