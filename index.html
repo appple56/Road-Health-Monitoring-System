@@ -53,9 +53,6 @@
     <button class="nav-button" data-page="visual" data-tooltip="Visual Inspection">
       <span class="nav-icon" aria-hidden="true">◉</span><span class="nav-caption">Visual</span>
     </button>
-    <button class="nav-button" data-page="marg-drishti" data-tooltip="Marg Drishti">
-      <span class="nav-icon" aria-hidden="true">⌁</span><span class="nav-caption">Marg Drishti</span>
-    </button>
     <button class="nav-button" data-page="report" data-tooltip="Report Problem">
       <span class="nav-icon" aria-hidden="true">＋</span><span class="nav-caption">Report</span>
     </button>
@@ -70,6 +67,9 @@
     </button>
     <button class="nav-button" data-page="pipes" data-tooltip="Pipe Monitoring">
       <span class="nav-icon" aria-hidden="true">≈</span><span class="nav-caption">Pipes</span>
+    </button>
+    <button class="nav-button md-nav-button" data-page="marg-drishti" data-tooltip="Marg Drishti">
+      <span class="nav-icon" aria-hidden="true">◈</span><span class="nav-caption">Marg Drishti</span>
     </button>
   </nav>
 
@@ -194,8 +194,8 @@
         <b>→</b>
       </button>
       <button class="module-card module-marg" data-jump="marg-drishti">
-        <div class="module-icon">⌁</div>
-        <div><span>05 / AI ROAD SENSING</span><h3>Marg Drishti</h3><p>Live road-condition intelligence from the vehicle-mounted AI sensor.</p></div>
+        <div class="module-icon">◈</div>
+        <div><span>05 / AI ROAD SENSING</span><h3>Marg Drishti</h3><p>Live 5-second road-condition classification from the vehicle-mounted sensor.</p></div>
         <b>→</b>
       </button>
     </div>
@@ -284,101 +284,6 @@
     </div>
   </section>
 
-  <!-- MARG DRISHTI -->
-  <section class="page" id="marg-drishti">
-    <div class="page-intro marg-page-intro">
-      <div>
-        <span class="eyebrow">AI ROAD CONDITION INTELLIGENCE</span>
-        <h2>Marg Drishti</h2>
-        <p>Live 5-second road-condition results received from the ESP32-C3 and stored in Supabase.</p>
-      </div>
-      <div class="marg-top-status">
-        <span class="status-badge" id="margDrishtiConnection">CONNECTING</span>
-        <span class="marg-live-pill"><span class="pulse"></span> LIVE</span>
-      </div>
-    </div>
-
-    <div class="marg-hero-grid">
-      <div class="panel marg-current-card">
-        <div class="marg-card-top">
-          <div>
-            <span class="eyebrow">CURRENT CONDITION</span>
-            <h3 id="margDrishtiCondition">WAITING FOR DATA</h3>
-          </div>
-          <div class="marg-condition-icon" id="margDrishtiConditionIcon">⌁</div>
-        </div>
-
-        <div class="marg-current-status" id="margDrishtiVehicle">WAITING</div>
-
-        <div class="marg-metrics">
-          <div class="marg-metric">
-            <span>AI CONFIDENCE</span>
-            <strong id="margDrishtiConfidence">—</strong>
-          </div>
-          <div class="marg-metric">
-            <span>DEVICE</span>
-            <strong id="margDrishtiDevice">—</strong>
-          </div>
-          <div class="marg-metric">
-            <span>LAST UPDATE</span>
-            <strong id="margDrishtiLastSeen">—</strong>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel marg-summary-card">
-        <div class="panel-head">
-          <div>
-            <span class="eyebrow">5-SECOND STREAM</span>
-            <h3>Road condition feed</h3>
-          </div>
-          <button class="ghost-btn" id="refreshMargDrishti" type="button">↻ Refresh</button>
-        </div>
-
-        <div class="marg-stat-grid">
-          <div class="marg-mini-card pothole">
-            <span>POTHOLE</span>
-            <strong id="margPotholeCount">0</strong>
-          </div>
-          <div class="marg-mini-card speed">
-            <span>SPEED BREAKER</span>
-            <strong id="margSpeedCount">0</strong>
-          </div>
-          <div class="marg-mini-card rough">
-            <span>ROUGH SURFACE</span>
-            <strong id="margRoughCount">0</strong>
-          </div>
-          <div class="marg-mini-card normal">
-            <span>NORMAL ROAD</span>
-            <strong id="margNormalCount">0</strong>
-          </div>
-        </div>
-
-        <div class="marg-stream-state">
-          <div>
-            <span class="eyebrow">DATA CONNECTION</span>
-            <strong id="margDrishtiConnectionText">Waiting for the first event…</strong>
-          </div>
-          <div class="marg-stream-time" id="margDrishtiSyncTime">—</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel marg-history-panel">
-      <div class="panel-head">
-        <div>
-          <span class="eyebrow">RECENT EVENTS</span>
-          <h3>Marg Drishti detection history</h3>
-        </div>
-        <span class="status-badge online" id="margDrishtiHistoryCount">0 EVENTS</span>
-      </div>
-
-      <div id="margDrishtiHistory" class="marg-history">
-        <div class="loading">Waiting for Marg Drishti data…</div>
-      </div>
-    </div>
-  </section>
-
   <!-- PIPES -->
   <section class="page" id="pipes">
     <div class="page-intro pipe-page-intro">
@@ -456,6 +361,101 @@
     </div>
   </section>
 
+  <!-- MARG DRISHTI -->
+  <section class="page" id="marg-drishti">
+    <div class="page-intro md-page-intro">
+      <div>
+        <span class="eyebrow">AI VEHICLE ROAD MONITORING</span>
+        <h2>Marg Drishti</h2>
+        <p>Live 5-second road-condition results from the ESP32-C3 + MPU-6050, stored in Supabase and streamed into RHMS.</p>
+      </div>
+      <div class="md-page-actions">
+        <span class="status-badge" id="margDrishtiConnection">CONNECTING</span>
+        <button class="ghost-btn" id="refreshMargDrishti" type="button">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="md-hero-grid">
+      <section class="panel md-live-card" id="mdStatusPanel" data-condition="unknown">
+        <div class="md-live-glow"></div>
+        <div class="md-live-head">
+          <div>
+            <span class="eyebrow">CURRENT CONDITION</span>
+            <div class="md-condition-row">
+              <h3 id="mdCurrentCondition">WAITING FOR DATA</h3>
+              <span class="md-condition-tag" id="mdConditionTag">NO EVENT</span>
+            </div>
+          </div>
+          <div class="md-condition-icon" id="mdConditionIcon">◈</div>
+        </div>
+
+        <div class="md-live-message" id="mdLiveMessage">Waiting for the first Marg Drishti event…</div>
+
+        <div class="md-meta-grid">
+          <div class="md-meta-cell">
+            <span>VEHICLE</span>
+            <strong id="mdVehicleStatus">—</strong>
+          </div>
+          <div class="md-meta-cell">
+            <span>AI CONFIDENCE</span>
+            <strong id="mdConfidence">—</strong>
+          </div>
+          <div class="md-meta-cell">
+            <span>DEVICE</span>
+            <strong id="mdDeviceId">—</strong>
+          </div>
+          <div class="md-meta-cell">
+            <span>LAST UPDATE</span>
+            <strong id="mdLastUpdate">—</strong>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel md-link-card">
+        <div class="md-link-top">
+          <div>
+            <span class="eyebrow">DATA CONNECTION</span>
+            <h3>Marg Drishti Link</h3>
+          </div>
+          <span class="md-online-chip" id="mdConnectionChip">OFFLINE</span>
+        </div>
+
+        <div class="md-link-status">
+          <span class="md-live-dot" id="mdConnectionDot"></span>
+          <div>
+            <strong id="mdConnectionText">Connecting…</strong>
+            <small>Supabase → marg_drishti_events</small>
+          </div>
+        </div>
+
+        <div class="md-link-row"><span>Realtime</span><strong id="mdRealtimeState">CONNECTING</strong></div>
+        <div class="md-link-row"><span>Database</span><strong id="mdDatabaseState">CHECKING</strong></div>
+        <div class="md-link-row"><span>Update cycle</span><strong>5 SEC</strong></div>
+      </aside>
+    </div>
+
+    <div class="md-stats-grid">
+      <div class="md-stat md-stat-normal"><span>NORMAL ROAD</span><strong id="mdNormalCount">0</strong><small>recent detections</small></div>
+      <div class="md-stat md-stat-breaker"><span>SPEED BREAKER</span><strong id="mdBreakerCount">0</strong><small>recent detections</small></div>
+      <div class="md-stat md-stat-pothole"><span>POTHOLE</span><strong id="mdPotholeCount">0</strong><small>recent detections</small></div>
+      <div class="md-stat md-stat-rough"><span>ROUGH SURFACE</span><strong id="mdRoughCount">0</strong><small>recent detections</small></div>
+      <div class="md-stat md-stat-stationary"><span>STATIONARY</span><strong id="mdStationaryCount">0</strong><small>recent detections</small></div>
+    </div>
+
+    <section class="panel md-history-panel">
+      <div class="panel-head">
+        <div>
+          <span class="eyebrow">5-SECOND STREAM</span>
+          <h3>Recent Marg Drishti detections</h3>
+        </div>
+        <span class="status-badge" id="mdHistoryCount">0 EVENTS</span>
+      </div>
+      <div id="mdHistory" class="md-history">
+        <div class="loading">Loading Marg Drishti data…</div>
+      </div>
+    </section>
+  </section>
+
   <!-- VISUAL -->
   <section class="page" id="visual">
     <div class="page-intro"><div><span class="eyebrow">ESP32-CAM</span><h2>Visual Inspection</h2><p>Connect this dashboard to your existing ESP32-CAM stream.</p></div></div>
@@ -497,7 +497,7 @@
     </div>
   </section>
 
-  <footer>RHMS <span>•</span> ROAD HEALTH MONITORING SYSTEM <span>•</span> FIELD PORTAL / V3</footer>
+  <footer>RHMS <span>•</span> ROAD HEALTH MONITORING SYSTEM <span>•</span> FIELD PORTAL / V4</footer>
 </main>
 
 <!-- Lightbox -->
