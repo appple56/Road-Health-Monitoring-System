@@ -15,6 +15,7 @@
 
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <div class="scene-system" aria-hidden="true">
@@ -38,6 +39,7 @@
 <div id="toast" class="toast"></div>
 
 <header class="topnav">
+
   <div class="topnav-brand">
     <img src="assets/rhms-logo.png" alt="RHMS" class="brand-logo-img">
     <div>
@@ -47,470 +49,1987 @@
   </div>
 
   <nav class="topnav-links" aria-label="Primary navigation">
-    <button class="nav-button active" data-page="dashboard" data-tooltip="Overview">
-      <span class="nav-icon" aria-hidden="true">⌂</span><span class="nav-caption">Overview</span>
+
+    <button class="nav-button active"
+            data-page="dashboard"
+            data-tooltip="Overview">
+      <span class="nav-icon" aria-hidden="true">⌂</span>
+      <span class="nav-caption">Overview</span>
     </button>
-    <button class="nav-button" data-page="visual" data-tooltip="Visual Inspection">
-      <span class="nav-icon" aria-hidden="true">◉</span><span class="nav-caption">Visual</span>
+
+    <button class="nav-button"
+            data-page="visual"
+            data-tooltip="Visual Inspection">
+      <span class="nav-icon" aria-hidden="true">◉</span>
+      <span class="nav-caption">Visual</span>
     </button>
-    <button class="nav-button" data-page="report" data-tooltip="Report Problem">
-      <span class="nav-icon" aria-hidden="true">＋</span><span class="nav-caption">Report</span>
+
+    <button class="nav-button"
+            data-page="report"
+            data-tooltip="Report Problem">
+      <span class="nav-icon" aria-hidden="true">＋</span>
+      <span class="nav-caption">Report</span>
     </button>
-    <button class="nav-button" data-page="map" data-tooltip="Pothole Map">
-      <span class="nav-icon" aria-hidden="true">⌖</span><span class="nav-caption">Map</span>
+
+    <button class="nav-button"
+            data-page="map"
+            data-tooltip="Pothole Map">
+      <span class="nav-icon" aria-hidden="true">⌖</span>
+      <span class="nav-caption">Map</span>
     </button>
-    <button class="nav-button" data-page="gallery" data-tooltip="Image Gallery">
-      <span class="nav-icon" aria-hidden="true">▦</span><span class="nav-caption">Gallery</span>
+
+    <button class="nav-button"
+            data-page="gallery"
+            data-tooltip="Image Gallery">
+      <span class="nav-icon" aria-hidden="true">▦</span>
+      <span class="nav-caption">Gallery</span>
     </button>
-    <button class="nav-button" data-page="reports" data-tooltip="Road Reports">
-      <span class="nav-icon" aria-hidden="true">≡</span><span class="nav-caption">Reports</span>
+
+    <button class="nav-button"
+            data-page="reports"
+            data-tooltip="Road Reports">
+      <span class="nav-icon" aria-hidden="true">≡</span>
+      <span class="nav-caption">Reports</span>
     </button>
-    <button class="nav-button" data-page="pipes" data-tooltip="Pipe Monitoring">
-      <span class="nav-icon" aria-hidden="true">≈</span><span class="nav-caption">Pipes</span>
+
+    <button class="nav-button"
+            data-page="pipes"
+            data-tooltip="Pipe Monitoring">
+      <span class="nav-icon" aria-hidden="true">≈</span>
+      <span class="nav-caption">Pipes</span>
     </button>
-    <button class="nav-button md-nav-button" data-page="marg-drishti" data-tooltip="Marg Drishti">
-      <span class="nav-icon" aria-hidden="true">◈</span><span class="nav-caption">Marg Drishti</span>
+
+    <button class="nav-button md-nav-button"
+            data-page="marg-drishti"
+            data-tooltip="Marg Drishti">
+      <span class="nav-icon" aria-hidden="true">◈</span>
+      <span class="nav-caption">Marg Drishti</span>
     </button>
+
   </nav>
 
   <div class="topnav-status">
     <span class="pulse"></span>
     <span id="systemText">SYSTEM ONLINE</span>
   </div>
+
 </header>
 
 <div id="pageTitle" class="sr-only">Overview</div>
 
 <main class="app">
+
   <header class="topbar">
     <div>
       <div class="eyebrow">ONLINE INSPECTION / DETECTION PORTAL</div>
       <h1 id="topPageTitle">Overview</h1>
     </div>
+
     <div class="topbar-right">
-      <div class="live-indicator"><span class="pulse"></span> LIVE</div>
+      <div class="live-indicator">
+        <span class="pulse"></span>
+        LIVE
+      </div>
+
       <div class="date" id="currentDate">--</div>
     </div>
   </header>
 
-  <!-- OVERVIEW -->
+
+  <!-- =========================================================
+       OVERVIEW
+  ========================================================== -->
+
   <section class="page active" id="dashboard">
-    <section class="hero cinematic-hero" aria-label="RHMS introduction">
+
+    <section class="hero cinematic-hero"
+             aria-label="RHMS introduction">
+
       <div class="hero-copy">
-        <div class="hero-kicker">SMART MONITORING · SAFER ROADS</div>
-        <h2>Detect problems<br><em>before they grow.</em></h2>
-        <p>RHMS brings road reports, geographic mapping, underground leakage monitoring and visual inspection into one focused infrastructure platform.</p>
-        <div class="hero-actions">
-          <button class="primary-btn hero-cta" data-jump="report">Explore the system <span>→</span></button>
-          <div class="hero-micro"><span class="pulse"></span> LIVE FIELD INTELLIGENCE</div>
+
+        <div class="hero-kicker">
+          SMART MONITORING · SAFER ROADS
         </div>
+
+        <h2>
+          Detect problems<br>
+          <em>before they grow.</em>
+        </h2>
+
+        <p>
+          RHMS brings road reports, geographic mapping,
+          underground leakage monitoring and visual inspection
+          into one focused infrastructure platform.
+        </p>
+
+        <div class="hero-actions">
+
+          <button class="primary-btn hero-cta"
+                  data-jump="report">
+            Explore the system
+            <span>→</span>
+          </button>
+
+          <div class="hero-micro">
+            <span class="pulse"></span>
+            LIVE FIELD INTELLIGENCE
+          </div>
+
+        </div>
+
       </div>
 
+
       <div class="hero-center">
+
         <div class="hero-orbit cinematic-orbit">
+
           <div class="orbit-ring ring-1"></div>
           <div class="orbit-ring ring-2"></div>
           <div class="orbit-ring ring-3"></div>
+
           <div class="orbit-sweep"></div>
+
           <div class="orbit-core">
-            <img src="assets/rhms-logo.png" alt="RHMS logo">
+            <img src="assets/rhms-logo.png"
+                 alt="RHMS logo">
           </div>
+
         </div>
-        <div class="hero-tagline">ROAD HEALTH MONITORING SYSTEM</div>
+
+        <div class="hero-tagline">
+          ROAD HEALTH MONITORING SYSTEM
+        </div>
+
       </div>
+
 
       <div class="hero-insights">
+
         <div class="insight-item">
           <span class="insight-icon">✦</span>
-          <div><strong>Safer Communities</strong><small>Faster issue detection</small></div>
+          <div>
+            <strong>Safer Communities</strong>
+            <small>Faster issue detection</small>
+          </div>
         </div>
+
         <div class="insight-item">
           <span class="insight-icon">◌</span>
-          <div><strong>Smarter Infrastructure</strong><small>Longer lasting roads</small></div>
+          <div>
+            <strong>Smarter Infrastructure</strong>
+            <small>Longer lasting roads</small>
+          </div>
         </div>
+
         <div class="insight-item">
           <span class="insight-icon">⌁</span>
-          <div><strong>Data Driven Decisions</strong><small>Real-time field insights</small></div>
+          <div>
+            <strong>Data Driven Decisions</strong>
+            <small>Real-time field insights</small>
+          </div>
         </div>
+
       </div>
+
 
       <div class="hero-bottomline">
-        <span>28.6139° N &nbsp; 77.2090° E</span>
-        <span>ROADS / PIPES / PEOPLE / A SAFER TOMORROW</span>
+        <span>
+          28.6139° N &nbsp; 77.2090° E
+        </span>
+
+        <span>
+          ROADS / PIPES / PEOPLE / A SAFER TOMORROW
+        </span>
       </div>
+
     </section>
+
 
     <div class="stat-grid">
+
       <div class="stat-card cyan">
-        <div class="stat-top"><span>TOTAL REPORTS</span><b>01</b></div>
+
+        <div class="stat-top">
+          <span>TOTAL REPORTS</span>
+          <b>01</b>
+        </div>
+
         <strong id="totalReports">0</strong>
-        <small>All submitted road reports</small>
+
+        <small>
+          All submitted road reports
+        </small>
+
         <div class="stat-line"></div>
+
       </div>
+
+
       <div class="stat-card orange">
-        <div class="stat-top"><span>PENDING</span><b>02</b></div>
+
+        <div class="stat-top">
+          <span>PENDING</span>
+          <b>02</b>
+        </div>
+
         <strong id="pendingReports">0</strong>
-        <small>Awaiting verification</small>
+
+        <small>
+          Awaiting verification
+        </small>
+
         <div class="stat-line"></div>
+
       </div>
+
+
       <div class="stat-card violet">
-        <div class="stat-top"><span>VERIFIED</span><b>03</b></div>
+
+        <div class="stat-top">
+          <span>VERIFIED</span>
+          <b>03</b>
+        </div>
+
         <strong id="verifiedReports">0</strong>
-        <small>Confirmed reports</small>
+
+        <small>
+          Confirmed reports
+        </small>
+
         <div class="stat-line"></div>
+
       </div>
+
+
       <div class="stat-card red">
-        <div class="stat-top"><span>ACTIVE LEAKS</span><b>04</b></div>
+
+        <div class="stat-top">
+          <span>ACTIVE LEAKS</span>
+          <b>04</b>
+        </div>
+
         <strong id="activeLeaks">—</strong>
-        <small>Live pipe-zone alerts</small>
+
+        <small>
+          Live pipe-zone alerts
+        </small>
+
         <div class="stat-line"></div>
+
       </div>
+
     </div>
+
 
     <div class="section-heading">
-      <div><span class="eyebrow">CORE MODULES</span><h3>Operational view</h3></div>
-      <button class="ghost-btn" data-jump="report">＋ New report</button>
+
+      <div>
+        <span class="eyebrow">CORE MODULES</span>
+        <h3>Operational view</h3>
+      </div>
+
+      <button class="ghost-btn"
+              data-jump="report">
+        ＋ New report
+      </button>
+
     </div>
+
 
     <div class="module-grid">
-      <button class="module-card module-map" data-jump="map">
+
+      <button class="module-card module-map"
+              data-jump="map">
+
         <div class="module-icon">⌖</div>
-        <div><span>01 / GEOSPATIAL</span><h3>Pothole Map</h3><p>Every submitted location plotted on a live map.</p></div>
+
+        <div>
+          <span>01 / GEOSPATIAL</span>
+          <h3>Pothole Map</h3>
+          <p>
+            Every submitted location plotted on a live map.
+          </p>
+        </div>
+
         <b>→</b>
+
       </button>
-      <button class="module-card module-gallery" data-jump="gallery">
+
+
+      <button class="module-card module-gallery"
+              data-jump="gallery">
+
         <div class="module-icon">▦</div>
-        <div><span>02 / EVIDENCE</span><h3>Image Gallery</h3><p>Visual evidence collected from field reports.</p></div>
+
+        <div>
+          <span>02 / EVIDENCE</span>
+          <h3>Image Gallery</h3>
+          <p>
+            Visual evidence collected from field reports.
+          </p>
+        </div>
+
         <b>→</b>
+
       </button>
-      <button class="module-card module-pipe" data-jump="pipes">
+
+
+      <button class="module-card module-pipe"
+              data-jump="pipes">
+
         <div class="module-icon">≈</div>
-        <div><span>03 / INFRASTRUCTURE</span><h3>Pipe Monitoring</h3><p>Zone-by-zone underground leakage status.</p></div>
+
+        <div>
+          <span>03 / INFRASTRUCTURE</span>
+          <h3>Pipe Monitoring</h3>
+          <p>
+            Zone-by-zone underground leakage status.
+          </p>
+        </div>
+
         <b>→</b>
+
       </button>
-      <button class="module-card module-cam" data-jump="visual">
+
+
+      <button class="module-card module-cam"
+              data-jump="visual">
+
         <div class="module-icon">◉</div>
-        <div><span>04 / INSPECTION</span><h3>Visual Inspection</h3><p>Connect to the ESP32-CAM inspection feed.</p></div>
+
+        <div>
+          <span>04 / INSPECTION</span>
+          <h3>Visual Inspection</h3>
+          <p>
+            Connect to the ESP32-CAM inspection feed.
+          </p>
+        </div>
+
         <b>→</b>
+
       </button>
-      <button class="module-card module-marg" data-jump="marg-drishti">
+
+
+      <button class="module-card module-marg"
+              data-jump="marg-drishti">
+
         <div class="module-icon">◈</div>
-        <div><span>05 / AI ROAD SENSING</span><h3>Marg Drishti</h3><p>Live 5-second road-condition classification from the vehicle-mounted sensor.</p></div>
+
+        <div>
+          <span>05 / AI ROAD SENSING</span>
+
+          <h3>Marg Drishti</h3>
+
+          <p>
+            Live 5-second road-condition classification
+            from the vehicle-mounted sensor.
+          </p>
+
+        </div>
+
         <b>→</b>
+
       </button>
+
     </div>
+
 
     <div class="split-grid">
+
       <div class="panel">
-        <div class="panel-head"><div><span class="eyebrow">RECENT ACTIVITY</span><h3>Latest reports</h3></div><button class="text-btn" data-jump="reports">View all →</button></div>
-        <div id="recentReports" class="recent-list"><div class="loading">Loading field data…</div></div>
+
+        <div class="panel-head">
+
+          <div>
+            <span class="eyebrow">RECENT ACTIVITY</span>
+            <h3>Latest reports</h3>
+          </div>
+
+          <button class="text-btn"
+                  data-jump="reports">
+            View all →
+          </button>
+
+        </div>
+
+        <div id="recentReports"
+             class="recent-list">
+
+          <div class="loading">
+            Loading field data…
+          </div>
+
+        </div>
+
       </div>
+
+
       <div class="panel system-panel">
-        <div class="panel-head"><div><span class="eyebrow">SYSTEM STATUS</span><h3>Infrastructure</h3></div><span class="status-badge online">ONLINE</span></div>
-        <div class="health-row"><span>Database</span><strong id="dbStatus">Checking…</strong></div>
-        <div class="health-row"><span>Map service</span><strong>READY</strong></div>
-        <div class="health-row"><span>Image storage</span><strong id="storageStatus">Checking…</strong></div>
-        <div class="health-row"><span>Last sync</span><strong id="lastSync">—</strong></div>
+
+        <div class="panel-head">
+
+          <div>
+            <span class="eyebrow">SYSTEM STATUS</span>
+            <h3>Infrastructure</h3>
+          </div>
+
+          <span class="status-badge online">
+            ONLINE
+          </span>
+
+        </div>
+
+        <div class="health-row">
+          <span>Database</span>
+          <strong id="dbStatus">
+            Checking…
+          </strong>
+        </div>
+
+        <div class="health-row">
+          <span>Map service</span>
+          <strong>READY</strong>
+        </div>
+
+        <div class="health-row">
+          <span>Image storage</span>
+          <strong id="storageStatus">
+            Checking…
+          </strong>
+        </div>
+
+        <div class="health-row">
+          <span>Last sync</span>
+          <strong id="lastSync">
+            —
+          </strong>
+        </div>
+
       </div>
+
     </div>
+
   </section>
 
-  <!-- MAP -->
+
+  <!-- =========================================================
+       MAP
+  ========================================================== -->
+
   <section class="page" id="map">
+
     <div class="page-intro">
-      <div><span class="eyebrow">GEOSPATIAL INTELLIGENCE</span><h2>Pothole Map</h2><p>Field reports appear automatically using their saved latitude and longitude.</p></div>
-      <div class="map-tools"><button class="ghost-btn" id="fitMarkersBtn">Fit reports</button><button class="ghost-btn" id="locateMapBtn">My location</button></div>
+
+      <div>
+        <span class="eyebrow">
+          GEOSPATIAL INTELLIGENCE
+        </span>
+
+        <h2>Pothole Map</h2>
+
+        <p>
+          Field reports appear automatically using
+          their saved latitude and longitude.
+        </p>
+      </div>
+
+      <div class="map-tools">
+
+        <button class="ghost-btn"
+                id="fitMarkersBtn">
+          Fit reports
+        </button>
+
+        <button class="ghost-btn"
+                id="locateMapBtn">
+          My location
+        </button>
+
+      </div>
+
     </div>
+
+
     <div class="map-shell">
+
       <div id="potholeMap"></div>
-      <div class="map-overlay"><span class="map-live-dot"></span><strong id="mapCount">0</strong> mapped reports</div>
+
+      <div class="map-overlay">
+
+        <span class="map-live-dot"></span>
+
+        <strong id="mapCount">0</strong>
+
+        mapped reports
+
+      </div>
+
     </div>
+
   </section>
 
-  <!-- GALLERY -->
+
+  <!-- =========================================================
+       GALLERY
+  ========================================================== -->
+
   <section class="page" id="gallery">
+
     <div class="page-intro">
-      <div><span class="eyebrow">FIELD EVIDENCE</span><h2>Image Gallery</h2><p>All report images stored in Supabase are shown here.</p></div>
-      <button class="ghost-btn" id="refreshGallery">↻ Refresh</button>
+
+      <div>
+
+        <span class="eyebrow">
+          FIELD EVIDENCE
+        </span>
+
+        <h2>Image Gallery</h2>
+
+        <p>
+          All report images stored in Supabase
+          are shown here.
+        </p>
+
+      </div>
+
+      <button class="ghost-btn"
+              id="refreshGallery">
+        ↻ Refresh
+      </button>
+
     </div>
+
+
     <div class="gallery-toolbar">
-      <input id="gallerySearch" class="search" placeholder="Search descriptions or problem types…">
-      <select id="galleryFilter" class="select"><option value="all">All reports</option><option value="Pending">Pending</option><option value="Verified">Verified</option><option value="Resolved">Resolved</option></select>
+
+      <input
+        id="gallerySearch"
+        class="search"
+        placeholder="Search descriptions or problem types…"
+      >
+
+      <select id="galleryFilter"
+              class="select">
+
+        <option value="all">
+          All reports
+        </option>
+
+        <option value="Pending">
+          Pending
+        </option>
+
+        <option value="Verified">
+          Verified
+        </option>
+
+        <option value="Resolved">
+          Resolved
+        </option>
+
+      </select>
+
     </div>
-    <div id="galleryGrid" class="gallery-grid"><div class="loading">Loading images…</div></div>
+
+
+    <div id="galleryGrid"
+         class="gallery-grid">
+
+      <div class="loading">
+        Loading images…
+      </div>
+
+    </div>
+
   </section>
 
-  <!-- REPORTS -->
+
+  <!-- =========================================================
+       REPORTS
+  ========================================================== -->
+
   <section class="page" id="reports">
-    <div class="page-intro"><div><span class="eyebrow">FIELD LOG</span><h2>Road Reports</h2><p>Complete history of submitted road-condition reports.</p></div><button class="primary-btn" data-jump="report">＋ Report problem</button></div>
-    <div class="panel reports-panel"><div id="reportsList" class="reports-list"><div class="loading">Loading reports…</div></div></div>
+
+    <div class="page-intro">
+
+      <div>
+
+        <span class="eyebrow">
+          FIELD LOG
+        </span>
+
+        <h2>Road Reports</h2>
+
+        <p>
+          Complete history of submitted road-condition reports.
+        </p>
+
+      </div>
+
+      <button class="primary-btn"
+              data-jump="report">
+        ＋ Report problem
+      </button>
+
+    </div>
+
+
+    <div class="panel reports-panel">
+
+      <div id="reportsList"
+           class="reports-list">
+
+        <div class="loading">
+          Loading reports…
+        </div>
+
+      </div>
+
+    </div>
+
   </section>
 
-  <!-- REPORT FORM -->
+
+  <!-- =========================================================
+       REPORT FORM
+  ========================================================== -->
+
   <section class="page" id="report">
-    <div class="page-intro"><div><span class="eyebrow">FIELD SUBMISSION</span><h2>Report Road Problem</h2><p>Upload evidence and save its geographic location to the RHMS database.</p></div></div>
+
+    <div class="page-intro">
+
+      <div>
+
+        <span class="eyebrow">
+          FIELD SUBMISSION
+        </span>
+
+        <h2>Report Road Problem</h2>
+
+        <p>
+          Upload evidence and save its geographic
+          location to the RHMS database.
+        </p>
+
+      </div>
+
+    </div>
+
+
     <div class="form-layout">
+
       <div class="panel form-panel">
-        <div class="form-step"><span>01</span><div><b>Evidence</b><small>Select a road-condition image.</small></div></div>
-        <label class="upload-zone" id="uploadZone">
-          <input id="potholeImage" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
-          <div class="upload-icon">↑</div>
-          <strong id="uploadTitle">Drop image here or click to browse</strong>
-          <small>JPG, PNG or WEBP · up to 10 MB</small>
-          <img id="imagePreview" class="upload-preview" alt="Selected image preview">
+
+
+        <!-- STEP 01 -->
+
+        <div class="form-step">
+
+          <span>01</span>
+
+          <div>
+            <b>Evidence</b>
+            <small>
+              Select a road-condition image.
+            </small>
+          </div>
+
+        </div>
+
+
+        <label class="upload-zone"
+               id="uploadZone">
+
+          <input
+            id="potholeImage"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image.heic,image/heif"
+          >
+
+          <div class="upload-icon">
+            ↑
+          </div>
+
+          <strong id="uploadTitle">
+            Drop image here or click to browse
+          </strong>
+
+          <small>
+            JPG, PNG or WEBP · up to 10 MB
+          </small>
+
+          <img
+            id="imagePreview"
+            class="upload-preview"
+            alt="Selected image preview"
+          >
+
         </label>
 
-        <div class="form-step"><span>02</span><div><b>Classification</b><small>Describe what was found.</small></div></div>
-        <label>Problem type<select id="problemType" class="input"><option value="Pothole">Pothole</option><option value="Road Crack">Road Crack</option><option value="Water Damage">Water Damage</option><option value="Surface Damage">Surface Damage</option><option value="Other">Other</option></select></label>
-        <label>Description<textarea id="description" class="input" rows="5" placeholder="Describe the road condition, approximate size, nearby landmark, etc."></textarea></label>
 
-        <div class="form-step"><span>03</span><div><b>Location</b><small>Use your current device location.</small></div></div>
-        <div class="location-box"><div class="location-icon">⌖</div><div><strong id="locationText">Location not captured</strong><small>Latitude / longitude will be saved with the report.</small></div><button class="ghost-btn" id="locationBtn" type="button">Detect</button></div>
-        <input type="hidden" id="latitude"><input type="hidden" id="longitude">
+        <!-- STEP 02 -->
 
-        <button class="primary-btn full" id="submitReportBtn" type="button">Submit report <span>→</span></button>
-        <div id="reportStatus" class="form-status"></div>
+        <div class="form-step">
+
+          <span>02</span>
+
+          <div>
+            <b>Classification</b>
+
+            <small>
+              Describe what was found.
+            </small>
+          </div>
+
+        </div>
+
+
+        <label>
+          Problem type
+
+          <select id="problemType"
+                  class="input">
+
+            <option value="Pothole">
+              Pothole
+            </option>
+
+            <option value="Road Crack">
+              Road Crack
+            </option>
+
+            <option value="Water Damage">
+              Water Damage
+            </option>
+
+            <option value="Surface Damage">
+              Surface Damage
+            </option>
+
+            <option value="Other">
+              Other
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+          Description
+
+          <textarea
+            id="description"
+            class="input"
+            rows="5"
+            placeholder="Describe the road condition, approximate size, nearby landmark, etc."
+          ></textarea>
+
+        </label>
+
+
+        <!-- =====================================================
+             POTHOLE ASSESSMENT
+        ====================================================== -->
+
+        <div id="potholeAssessment"
+             class="pothole-assessment">
+
+          <div class="pothole-assessment-head">
+
+            <div>
+
+              <span class="eyebrow">
+                DAMAGE ASSESSMENT
+              </span>
+
+              <h3>
+                Pothole severity
+              </h3>
+
+              <p>
+                Select the approximate depth and surface size
+                of the pothole.
+              </p>
+
+            </div>
+
+            <span id="severityBadge"
+                  class="severity-badge">
+              NOT ASSESSED
+            </span>
+
+          </div>
+
+
+          <div class="pothole-assessment-grid">
+
+
+            <label>
+
+              <span>
+                Pothole depth
+              </span>
+
+              <select id="potholeDepth"
+                      class="input">
+
+                <option value="">
+                  Select depth
+                </option>
+
+                <option value="Less than 2 cm">
+                  Less than 2 cm
+                </option>
+
+                <option value="2–5 cm">
+                  2–5 cm
+                </option>
+
+                <option value="5–10 cm">
+                  5–10 cm
+                </option>
+
+                <option value="10–20 cm">
+                  10–20 cm
+                </option>
+
+                <option value="More than 20 cm">
+                  More than 20 cm
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              <span>
+                Pothole size
+              </span>
+
+              <select id="potholeSize"
+                      class="input">
+
+                <option value="">
+                  Select size
+                </option>
+
+                <option value="Small (< 0.25 m²)">
+                  Small (&lt; 0.25 m²)
+                </option>
+
+                <option value="Medium (0.25–1 m²)">
+                  Medium (0.25–1 m²)
+                </option>
+
+                <option value="Large (1–2.5 m²)">
+                  Large (1–2.5 m²)
+                </option>
+
+                <option value="Very large (> 2.5 m²)">
+                  Very large (&gt; 2.5 m²)
+                </option>
+
+              </select>
+
+            </label>
+
+          </div>
+
+
+          <div id="severityExplanation"
+               class="severity-explanation">
+
+            Select depth and size to calculate severity.
+
+          </div>
+
+        </div>
+
+
+        <!-- STEP 03 -->
+
+        <div class="form-step">
+
+          <span>03</span>
+
+          <div>
+
+            <b>Location</b>
+
+            <small>
+              Use your current device location.
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="location-box">
+
+          <div class="location-icon">
+            ⌖
+          </div>
+
+          <div>
+
+            <strong id="locationText">
+              Location not captured
+            </strong>
+
+            <small>
+              Latitude / longitude will be saved with the report.
+            </small>
+
+          </div>
+
+          <button class="ghost-btn"
+                  id="locationBtn"
+                  type="button">
+            Detect
+          </button>
+
+        </div>
+
+
+        <input type="hidden"
+               id="latitude">
+
+        <input type="hidden"
+               id="longitude">
+
+
+        <button class="primary-btn full"
+                id="submitReportBtn"
+                type="button">
+
+          Submit report
+          <span>→</span>
+
+        </button>
+
+
+        <div id="reportStatus"
+             class="form-status"></div>
+
       </div>
+
+
+      <!-- PREVIEW -->
 
       <div class="panel preview-panel">
-        <span class="eyebrow">SUBMISSION PREVIEW</span>
-        <h3>Before you send</h3>
+
+        <span class="eyebrow">
+          SUBMISSION PREVIEW
+        </span>
+
+        <h3>
+          Before you send
+        </h3>
+
+
         <div class="preview-card">
-          <div id="previewImageBox" class="preview-image-box"><span>IMAGE PREVIEW</span></div>
-          <div class="preview-meta"><span id="previewType">Pothole</span><strong id="previewDescription">No description yet</strong><small id="previewLocation">Location pending</small></div>
+
+          <div id="previewImageBox"
+               class="preview-image-box">
+
+            <span>
+              IMAGE PREVIEW
+            </span>
+
+          </div>
+
+
+          <div class="preview-meta">
+
+            <span id="previewType">
+              Pothole
+            </span>
+
+            <strong id="previewDescription">
+              No description yet
+            </strong>
+
+            <small id="previewLocation">
+              Location pending
+            </small>
+
+            <div class="preview-assessment">
+
+              <div>
+                <span>Depth</span>
+                <strong id="previewDepth">
+                  —
+                </strong>
+              </div>
+
+              <div>
+                <span>Size</span>
+                <strong id="previewSize">
+                  —
+                </strong>
+              </div>
+
+              <div>
+                <span>Severity</span>
+                <strong id="previewSeverity">
+                  —
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
-        <div class="tip"><b>TIP</b><p>Capture the road damage clearly and include enough surroundings to help an inspector identify the location.</p></div>
+
+
+        <div class="tip">
+
+          <b>TIP</b>
+
+          <p>
+            Capture the road damage clearly and include
+            enough surroundings to help an inspector
+            identify the location.
+          </p>
+
+        </div>
+
       </div>
+
     </div>
+
   </section>
 
-  <!-- PIPES -->
+
+  <!-- =========================================================
+       PIPES
+  ========================================================== -->
+
   <section class="page" id="pipes">
+
     <div class="page-intro pipe-page-intro">
+
       <div>
-        <span class="eyebrow">UNDERGROUND INFRASTRUCTURE</span>
-        <h2>Pipe Monitoring</h2>
-        <p>Eight sensing zones across two monitored pipe sections. The interface shows live electrical state, active leaks and the latest controller poll.</p>
+
+        <span class="eyebrow">
+          UNDERGROUND INFRASTRUCTURE
+        </span>
+
+        <h2>
+          Pipe Monitoring
+        </h2>
+
+        <p>
+          Eight sensing zones across two monitored pipe sections.
+          The interface shows live electrical state, active leaks
+          and the latest controller poll.
+        </p>
+
       </div>
+
+
       <div class="pipe-intro-right">
-        <div class="status-badge online" id="pipeConnection">LIVE POLL</div>
-        <div class="pipe-intro-stat"><span>MONITORED</span><strong>08</strong><small>ZONES</small></div>
+
+        <div class="status-badge online"
+             id="pipeConnection">
+          LIVE POLL
+        </div>
+
+        <div class="pipe-intro-stat">
+
+          <span>MONITORED</span>
+
+          <strong>08</strong>
+
+          <small>ZONES</small>
+
+        </div>
+
       </div>
+
     </div>
 
-    <div class="pipe-alert" id="pipeAlert">
-      <div class="pipe-alert-icon">!</div>
-      <div class="pipe-alert-copy">
-        <span class="eyebrow">LIVE SAFETY EVENT</span>
-        <strong id="pipeAlertTitle">PIPELINE ALERT</strong>
-        <span id="pipeAlertText">Leakage detected.</span>
+
+    <div class="pipe-alert"
+         id="pipeAlert">
+
+      <div class="pipe-alert-icon">
+        !
       </div>
-      <button class="ghost-btn" id="jumpToPipe">View zones</button>
+
+      <div class="pipe-alert-copy">
+
+        <span class="eyebrow">
+          LIVE SAFETY EVENT
+        </span>
+
+        <strong id="pipeAlertTitle">
+          PIPELINE ALERT
+        </strong>
+
+        <span id="pipeAlertText">
+          Leakage detected.
+        </span>
+
+      </div>
+
+      <button class="ghost-btn"
+              id="jumpToPipe">
+        View zones
+      </button>
+
     </div>
+
 
     <div class="pipe-dashboard pipe-dashboard-peak">
-      <div class="pipe-overview panel pipe-card-peak">
-        <div class="pipe-card-glow"></div>
-        <div class="pipe-title">
-          <div>
-            <span>PIPE 01 · PRIMARY LINE</span>
-            <strong>A1 — A4</strong>
-          </div>
-          <div class="pipe-state-block">
-            <b id="pipeAState">STABLE</b>
-            <small>4 ZONES</small>
-          </div>
-        </div>
-        <div class="pipe-track pipe-track-peak">
-          <div id="pipeA" class="pipe-line"></div>
-          <i></i><i></i><i></i><i></i>
-        </div>
-        <div class="pipe-flow-labels"><span>ENTRY</span><span>ZONE NETWORK</span><span>EXIT</span></div>
-        <div class="zone-grid zone-grid-peak" id="zonesA"></div>
-      </div>
+
+
+      <!-- PIPE A -->
 
       <div class="pipe-overview panel pipe-card-peak">
-        <div class="pipe-card-glow pipe-card-glow-b"></div>
+
+        <div class="pipe-card-glow"></div>
+
         <div class="pipe-title">
+
           <div>
-            <span>PIPE 02 · SECONDARY LINE</span>
-            <strong>B1 — B4</strong>
+
+            <span>
+              PIPE 01 · PRIMARY LINE
+            </span>
+
+            <strong>
+              A1 — A4
+            </strong>
+
           </div>
+
           <div class="pipe-state-block">
-            <b id="pipeBState">STABLE</b>
-            <small>4 ZONES</small>
+
+            <b id="pipeAState">
+              STABLE
+            </b>
+
+            <small>
+              4 ZONES
+            </small>
+
           </div>
+
         </div>
+
+
         <div class="pipe-track pipe-track-peak">
-          <div id="pipeB" class="pipe-line"></div>
-          <i></i><i></i><i></i><i></i>
+
+          <div id="pipeA"
+               class="pipe-line"></div>
+
+          <i></i>
+          <i></i>
+          <i></i>
+          <i></i>
+
         </div>
-        <div class="pipe-flow-labels"><span>ENTRY</span><span>ZONE NETWORK</span><span>EXIT</span></div>
-        <div class="zone-grid zone-grid-peak" id="zonesB"></div>
+
+
+        <div class="pipe-flow-labels">
+
+          <span>ENTRY</span>
+          <span>ZONE NETWORK</span>
+          <span>EXIT</span>
+
+        </div>
+
+
+        <div class="zone-grid zone-grid-peak"
+             id="zonesA">
+        </div>
+
       </div>
+
+
+      <!-- PIPE B -->
+
+      <div class="pipe-overview panel pipe-card-peak">
+
+        <div class="pipe-card-glow pipe-card-glow-b"></div>
+
+        <div class="pipe-title">
+
+          <div>
+
+            <span>
+              PIPE 02 · SECONDARY LINE
+            </span>
+
+            <strong>
+              B1 — B4
+            </strong>
+
+          </div>
+
+          <div class="pipe-state-block">
+
+            <b id="pipeBState">
+              STABLE
+            </b>
+
+            <small>
+              4 ZONES
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="pipe-track pipe-track-peak">
+
+          <div id="pipeB"
+               class="pipe-line"></div>
+
+          <i></i>
+          <i></i>
+          <i></i>
+          <i></i>
+
+        </div>
+
+
+        <div class="pipe-flow-labels">
+
+          <span>ENTRY</span>
+          <span>ZONE NETWORK</span>
+          <span>EXIT</span>
+
+        </div>
+
+
+        <div class="zone-grid zone-grid-peak"
+             id="zonesB">
+        </div>
+
+      </div>
+
     </div>
+
 
     <div class="panel pipe-note pipe-note-peak">
+
       <div class="pipe-note-main">
-        <span class="eyebrow">DETECTION LOGIC</span>
-        <strong>Conductive water bridge → digital LOW → LEAK</strong>
+
+        <span class="eyebrow">
+          DETECTION LOGIC
+        </span>
+
+        <strong>
+          Conductive water bridge → digital LOW → LEAK
+        </strong>
+
       </div>
-      <div class="logic-key"><i class="logic-dot green"></i><span>DRY / HIGH / NORMAL</span></div>
-      <div class="logic-key"><i class="logic-dot red"></i><span>WATER / LOW / LEAK</span></div>
-      <div class="last-pipe-poll"><span>LAST POLL</span><b id="lastPipePoll">—</b></div>
+
+
+      <div class="logic-key">
+
+        <i class="logic-dot green"></i>
+
+        <span>
+          DRY / HIGH / NORMAL
+        </span>
+
+      </div>
+
+
+      <div class="logic-key">
+
+        <i class="logic-dot red"></i>
+
+        <span>
+          WATER / LOW / LEAK
+        </span>
+
+      </div>
+
+
+      <div class="last-pipe-poll">
+
+        <span>
+          LAST POLL
+        </span>
+
+        <b id="lastPipePoll">
+          —
+        </b>
+
+      </div>
+
     </div>
+
   </section>
 
-  <!-- MARG DRISHTI -->
-  <section class="page" id="marg-drishti">
+
+  <!-- =========================================================
+       MARG DRISHTI
+  ========================================================== -->
+
+  <section class="page"
+           id="marg-drishti">
+
+
     <div class="page-intro md-page-intro">
+
       <div>
-        <span class="eyebrow">AI VEHICLE ROAD MONITORING</span>
-        <h2>Marg Drishti</h2>
-        <p>Live 5-second road-condition results from the ESP32-C3 + MPU-6050, stored in Supabase and streamed into RHMS.</p>
+
+        <span class="eyebrow">
+          AI VEHICLE ROAD MONITORING
+        </span>
+
+        <h2>
+          Marg Drishti
+        </h2>
+
+        <p>
+          Live 5-second road-condition results from the
+          ESP32-C3 + MPU-6050, stored in Supabase and
+          streamed into RHMS.
+        </p>
+
       </div>
+
+
       <div class="md-page-actions">
-        <span class="status-badge" id="margDrishtiConnection">CONNECTING</span>
-        <button class="ghost-btn" id="refreshMargDrishti" type="button">↻ Refresh</button>
+
+        <span class="status-badge"
+              id="margDrishtiConnection">
+          CONNECTING
+        </span>
+
+        <button class="ghost-btn"
+                id="refreshMargDrishti"
+                type="button">
+          ↻ Refresh
+        </button>
+
       </div>
+
     </div>
+
 
     <div class="md-hero-grid">
-      <section class="panel md-live-card" id="mdStatusPanel" data-condition="unknown">
+
+
+      <!-- LIVE STATUS -->
+
+      <section class="panel md-live-card"
+               id="mdStatusPanel"
+               data-condition="unknown">
+
         <div class="md-live-glow"></div>
+
+
         <div class="md-live-head">
+
           <div>
-            <span class="eyebrow">CURRENT CONDITION</span>
+
+            <span class="eyebrow">
+              CURRENT CONDITION
+            </span>
+
             <div class="md-condition-row">
-              <h3 id="mdCurrentCondition">WAITING FOR DATA</h3>
-              <span class="md-condition-tag" id="mdConditionTag">NO EVENT</span>
+
+              <h3 id="mdCurrentCondition">
+                WAITING FOR DATA
+              </h3>
+
+              <span class="md-condition-tag"
+                    id="mdConditionTag">
+                NO EVENT
+              </span>
+
             </div>
+
           </div>
-          <div class="md-condition-icon" id="mdConditionIcon">◈</div>
+
+
+          <div class="md-condition-icon"
+               id="mdConditionIcon">
+            ◈
+          </div>
+
         </div>
 
-        <div class="md-live-message" id="mdLiveMessage">Waiting for the first Marg Drishti event…</div>
+
+        <div class="md-live-message"
+             id="mdLiveMessage">
+
+          Waiting for the first Marg Drishti event…
+
+        </div>
+
 
         <div class="md-meta-grid">
+
+
           <div class="md-meta-cell">
-            <span>VEHICLE</span>
-            <strong id="mdVehicleStatus">—</strong>
+
+            <span>
+              VEHICLE
+            </span>
+
+            <strong id="mdVehicleStatus">
+              —
+            </strong>
+
           </div>
+
+
           <div class="md-meta-cell">
-            <span>AI CONFIDENCE</span>
-            <strong id="mdConfidence">—</strong>
+
+            <span>
+              AI CONFIDENCE
+            </span>
+
+            <strong id="mdConfidence">
+              —
+            </strong>
+
           </div>
+
+
           <div class="md-meta-cell">
-            <span>DEVICE</span>
-            <strong id="mdDeviceId">—</strong>
+
+            <span>
+              DEVICE
+            </span>
+
+            <strong id="mdDeviceId">
+              —
+            </strong>
+
           </div>
+
+
           <div class="md-meta-cell">
-            <span>LAST UPDATE</span>
-            <strong id="mdLastUpdate">—</strong>
+
+            <span>
+              LAST UPDATE
+            </span>
+
+            <strong id="mdLastUpdate">
+              —
+            </strong>
+
           </div>
+
+
+          <!-- NEW GPS LOCATION -->
+
+          <div class="md-meta-cell md-gps-cell">
+
+            <span>
+              GPS LOCATION
+            </span>
+
+            <strong id="mdGpsLocation">
+              —
+            </strong>
+
+          </div>
+
+
+          <!-- NEW GPS SPEED -->
+
+          <div class="md-meta-cell md-gps-cell">
+
+            <span>
+              GPS SPEED
+            </span>
+
+            <strong id="mdGpsSpeed">
+              —
+            </strong>
+
+          </div>
+
+
+          <!-- DEVICE STATE -->
+
+          <div class="md-meta-cell md-gps-cell">
+
+            <span>
+              DEVICE STATE
+            </span>
+
+            <strong id="mdDeviceLinkState">
+              —
+            </strong>
+
+          </div>
+
+
+          <!-- GPS STATE -->
+
+          <div class="md-meta-cell md-gps-cell">
+
+            <span>
+              GPS STATE
+            </span>
+
+            <strong id="mdGpsConnectionState">
+              —
+            </strong>
+
+          </div>
+
         </div>
+
       </section>
 
+
+      <!-- CONNECTION -->
+
       <aside class="panel md-link-card">
+
         <div class="md-link-top">
+
           <div>
-            <span class="eyebrow">DATA CONNECTION</span>
-            <h3>Marg Drishti Link</h3>
+
+            <span class="eyebrow">
+              DATA CONNECTION
+            </span>
+
+            <h3>
+              Marg Drishti Link
+            </h3>
+
           </div>
-          <span class="md-online-chip" id="mdConnectionChip">OFFLINE</span>
+
+          <span class="md-online-chip"
+                id="mdConnectionChip">
+            OFFLINE
+          </span>
+
         </div>
+
 
         <div class="md-link-status">
-          <span class="md-live-dot" id="mdConnectionDot"></span>
+
+          <span class="md-live-dot"
+                id="mdConnectionDot">
+          </span>
+
           <div>
-            <strong id="mdConnectionText">Connecting…</strong>
-            <small>Supabase → marg_drishti_events</small>
+
+            <strong id="mdConnectionText">
+              Connecting…
+            </strong>
+
+            <small>
+              Supabase → marg_drishti_events
+            </small>
+
           </div>
+
         </div>
 
-        <div class="md-link-row"><span>Realtime</span><strong id="mdRealtimeState">CONNECTING</strong></div>
-        <div class="md-link-row"><span>Database</span><strong id="mdDatabaseState">CHECKING</strong></div>
-        <div class="md-link-row"><span>Update cycle</span><strong>5 SEC</strong></div>
+
+        <div class="md-link-row">
+
+          <span>
+            Realtime
+          </span>
+
+          <strong id="mdRealtimeState">
+            CONNECTING
+          </strong>
+
+        </div>
+
+
+        <div class="md-link-row">
+
+          <span>
+            Database
+          </span>
+
+          <strong id="mdDatabaseState">
+            CHECKING
+          </strong>
+
+        </div>
+
+
+        <div class="md-link-row">
+
+          <span>
+            Update cycle
+          </span>
+
+          <strong>
+            5 SEC
+          </strong>
+
+        </div>
+
       </aside>
+
     </div>
+
+
+    <!-- MARG STATS -->
 
     <div class="md-stats-grid">
-      <div class="md-stat md-stat-normal"><span>NORMAL ROAD</span><strong id="mdNormalCount">0</strong><small>recent detections</small></div>
-      <div class="md-stat md-stat-breaker"><span>SPEED BREAKER</span><strong id="mdBreakerCount">0</strong><small>recent detections</small></div>
-      <div class="md-stat md-stat-pothole"><span>POTHOLE</span><strong id="mdPotholeCount">0</strong><small>recent detections</small></div>
-      <div class="md-stat md-stat-rough"><span>ROUGH SURFACE</span><strong id="mdRoughCount">0</strong><small>recent detections</small></div>
-      <div class="md-stat md-stat-stationary"><span>STATIONARY</span><strong id="mdStationaryCount">0</strong><small>recent detections</small></div>
+
+      <div class="md-stat md-stat-normal">
+
+        <span>
+          NORMAL ROAD
+        </span>
+
+        <strong id="mdNormalCount">
+          0
+        </strong>
+
+        <small>
+          recent detections
+        </small>
+
+      </div>
+
+
+      <div class="md-stat md-stat-breaker">
+
+        <span>
+          SPEED BREAKER
+        </span>
+
+        <strong id="mdBreakerCount">
+          0
+        </strong>
+
+        <small>
+          recent detections
+        </small>
+
+      </div>
+
+
+      <div class="md-stat md-stat-pothole">
+
+        <span>
+          POTHOLE
+        </span>
+
+        <strong id="mdPotholeCount">
+          0
+        </strong>
+
+        <small>
+          recent detections
+        </small>
+
+      </div>
+
+
+      <div class="md-stat md-stat-rough">
+
+        <span>
+          ROUGH SURFACE
+        </span>
+
+        <strong id="mdRoughCount">
+          0
+        </strong>
+
+        <small>
+          recent detections
+        </small>
+
+      </div>
+
+
+      <div class="md-stat md-stat-stationary">
+
+        <span>
+          STATIONARY
+        </span>
+
+        <strong id="mdStationaryCount">
+          0
+        </strong>
+
+        <small>
+          recent detections
+        </small>
+
+      </div>
+
     </div>
+
+
+    <!-- MARG HISTORY -->
 
     <section class="panel md-history-panel">
+
       <div class="panel-head">
+
         <div>
-          <span class="eyebrow">5-SECOND STREAM</span>
-          <h3>Recent Marg Drishti detections</h3>
+
+          <span class="eyebrow">
+            5-SECOND STREAM
+          </span>
+
+          <h3>
+            Recent Marg Drishti detections
+          </h3>
+
         </div>
-        <span class="status-badge" id="mdHistoryCount">0 EVENTS</span>
+
+        <span class="status-badge"
+              id="mdHistoryCount">
+          0 EVENTS
+        </span>
+
       </div>
-      <div id="mdHistory" class="md-history">
-        <div class="loading">Loading Marg Drishti data…</div>
+
+
+      <div id="mdHistory"
+           class="md-history">
+
+        <div class="loading">
+          Loading Marg Drishti data…
+        </div>
+
       </div>
+
     </section>
+
   </section>
 
-  <!-- VISUAL -->
-  <section class="page" id="visual">
-    <div class="page-intro"><div><span class="eyebrow">ESP32-CAM</span><h2>Visual Inspection</h2><p>Connect this dashboard to your existing ESP32-CAM stream.</p></div></div>
-    <div class="camera-layout">
-      <div class="panel camera-panel">
-        <div class="camera-head"><div><span class="eyebrow">LIVE FEED</span><h3>Inspection camera</h3></div><span id="cameraStatus" class="status-badge">OFFLINE</span></div>
-        <div class="camera-screen"><div class="camera-grid"></div><div class="camera-placeholder"><div class="camera-symbol">◉</div><strong id="cameraConnection">CAMERA FEED READY</strong><small>Enter your ESP32-CAM stream URL below.</small></div><img id="cameraStream" alt="ESP32-CAM stream"></div>
-       <div class="camera-controls camera-cloud-controls">
 
-  <div class="camera-live-info">
+  <!-- =========================================================
+       VISUAL INSPECTION
+  ========================================================== -->
 
-    <span class="camera-live-dot"></span>
+  <section class="page"
+           id="visual">
 
-    <div>
+    <div class="page-intro">
 
-      <strong id="cameraCloudState">
-        CONNECTING TO CAMERA
-      </strong>
+      <div>
 
-      <small id="cameraCloudTime">
-        Waiting for latest image...
-      </small>
+        <span class="eyebrow">
+          ESP32-CAM
+        </span>
 
-    </div>
+        <h2>
+          Visual Inspection
+        </h2>
 
-  </div>
+        <p>
+          Connect this dashboard to your existing
+          ESP32-CAM stream.
+        </p>
 
-  <button
-    class="primary-btn"
-    id="refreshCameraBtn"
-    type="button"
-  >
-    ↻ Refresh
-  </button>
-
-</div>
       </div>
-      <div class="panel camera-info"><span class="eyebrow">INSPECTION NOTES</span><h3>What to look for</h3><div class="check"><b>01</b><span>Visible cracks or breaks</span></div><div class="check"><b>02</b><span>Sediment or blockage</span></div><div class="check"><b>03</b><span>Water accumulation</span></div><div class="check"><b>04</b><span>Structural condition</span></div></div>
+
     </div>
+
+
+    <div class="camera-layout">
+
+
+      <div class="panel camera-panel">
+
+        <div class="camera-head">
+
+          <div>
+
+            <span class="eyebrow">
+              LIVE FEED
+            </span>
+
+            <h3>
+              Inspection camera
+            </h3>
+
+          </div>
+
+          <span id="cameraStatus"
+                class="status-badge">
+            OFFLINE
+          </span>
+
+        </div>
+
+
+        <div class="camera-screen">
+
+          <div class="camera-grid"></div>
+
+          <div class="camera-placeholder">
+
+            <div class="camera-symbol">
+              ◉
+            </div>
+
+            <strong id="cameraConnection">
+              CAMERA FEED READY
+            </strong>
+
+            <small>
+              Enter your ESP32-CAM stream URL below.
+            </small>
+
+          </div>
+
+          <img id="cameraStream"
+               alt="ESP32-CAM stream">
+
+        </div>
+
+
+        <div class="camera-controls camera-cloud-controls">
+
+          <div class="camera-live-info">
+
+            <span class="camera-live-dot"></span>
+
+            <div>
+
+              <strong id="cameraCloudState">
+                CONNECTING TO CAMERA
+              </strong>
+
+              <small id="cameraCloudTime">
+                Waiting for latest image...
+              </small>
+
+            </div>
+
+          </div>
+
+
+          <button class="primary-btn"
+                  id="refreshCameraBtn"
+                  type="button">
+
+            ↻ Refresh
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="panel camera-info">
+
+        <span class="eyebrow">
+          INSPECTION NOTES
+        </span>
+
+        <h3>
+          What to look for
+        </h3>
+
+
+        <div class="check">
+          <b>01</b>
+          <span>
+            Visible cracks or breaks
+          </span>
+        </div>
+
+
+        <div class="check">
+          <b>02</b>
+          <span>
+            Sediment or blockage
+          </span>
+        </div>
+
+
+        <div class="check">
+          <b>03</b>
+          <span>
+            Water accumulation
+          </span>
+        </div>
+
+
+        <div class="check">
+          <b>04</b>
+          <span>
+            Structural condition
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
   </section>
 
-  <footer>RHMS <span>•</span> ROAD HEALTH MONITORING SYSTEM <span>•</span> FIELD PORTAL / V4</footer>
+
+  <!-- =========================================================
+       FOOTER
+  ========================================================== -->
+
+  <footer>
+
+    RHMS
+    <span>•</span>
+    ROAD HEALTH MONITORING SYSTEM
+    <span>•</span>
+    FIELD PORTAL / V4
+
+  </footer>
+
 </main>
 
-<!-- Lightbox -->
-<div id="lightbox" class="lightbox">
-  <button id="closeLightbox" class="lightbox-close">×</button>
-  <img id="lightboxImage" alt="Report image">
-  <div id="lightboxCaption" class="lightbox-caption"></div>
+
+<!-- =========================================================
+     LIGHTBOX
+========================================================== -->
+
+<div id="lightbox"
+     class="lightbox">
+
+  <button id="closeLightbox"
+          class="lightbox-close">
+    ×
+  </button>
+
+  <img id="lightboxImage"
+       alt="Report image">
+
+  <div id="lightboxCaption"
+       class="lightbox-caption">
+  </div>
+
 </div>
 
+
+<!-- =========================================================
+     LIBRARIES
+========================================================== -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin="">
+</script>
+
 <script src="app.js"></script>
+
 </body>
 </html>
