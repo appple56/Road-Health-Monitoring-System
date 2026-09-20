@@ -4754,3 +4754,441 @@ setupCinematicBackground();
 ========================================================= */
 
 init();
+/* =========================================================
+   RHMS ADD-ON
+   POTHOLE SEVERITY + MARG DRISHTI GPS
+   ========================================================= */
+
+
+/* =========================================================
+   POTHOLE SEVERITY GRADING
+   ========================================================= */
+
+function rhmsDepthScore(depth) {
+
+  const value =
+    String(depth || "").toLowerCase();
+
+  if (value.includes("less"))
+    return 1;
+
+  if (
+    value.includes("2–5") ||
+    value.includes("2-5")
+  )
+    return 2;
+
+  if (
+    value.includes("5–10") ||
+    value.includes("5-10")
+  )
+    return 3;
+
+  if (
+    value.includes("10–20") ||
+    value.includes("10-20")
+  )
+    return 4;
+
+  if (value.includes("more"))
+    return 5;
+
+  return 0;
+}
+
+
+function rhmsSizeScore(size) {
+
+  const value =
+    String(size || "").toLowerCase();
+
+  if (value.includes("small"))
+    return 1;
+
+  if (value.includes("medium"))
+    return 2;
+
+  if (
+    value.includes("large") &&
+    !value.includes("very")
+  )
+    return 3;
+
+  if (value.includes("very large"))
+    return 4;
+
+  return 0;
+}
+
+
+function rhmsCalculateSeverity(
+  depth,
+  size
+) {
+
+  const depthScore =
+    rhmsDepthScore(depth);
+
+  const sizeScore =
+    rhmsSizeScore(size);
+
+  if (
+    !depthScore ||
+    !sizeScore
+  ) {
+    return "";
+  }
+
+  const total =
+    depthScore +
+    sizeScore;
+
+  if (total <= 2)
+    return "LOW";
+
+  if (total <= 4)
+    return "MODERATE";
+
+  if (total <= 6)
+    return "HIGH";
+
+  return "CRITICAL";
+}
+
+
+/* =========================================================
+   SEVERITY DISPLAY
+   ========================================================= */
+
+function rhmsUpdateSeverity() {
+
+  const depth =
+    $("potholeDepth")?.value || "";
+
+  const size =
+    $("potholeSize")?.value || "";
+
+  const severity =
+    rhmsCalculateSeverity(
+      depth,
+      size
+    );
+
+  const badge =
+    $("severityBadge");
+
+  const explanation =
+    $("severityExplanation");
+
+
+  if (!badge)
+    return;
+
+
+  badge.className =
+    "severity-badge";
+
+
+  if (!severity) {
+
+    badge.textContent =
+      "SELECT BOTH";
+
+    if (explanation) {
+
+      explanation.textContent =
+        "Select the pothole depth and size to calculate severity.";
+
+    }
+
+    return;
+
+  }
+
+
+  badge.textContent =
+    severity;
+
+  badge.classList.add(
+    severity.toLowerCase()
+  );
+
+
+  if (explanation) {
+
+    explanation.textContent =
+      `RHMS severity: ${severity}. Depth and affected area are combined for this project grading.`;
+
+  }
+
+}
+
+
+/* =========================================================
+   SEVERITY LISTENERS
+   ========================================================= */
+
+$("potholeDepth")
+  ?.addEventListener(
+    "change",
+    rhmsUpdateSeverity
+  );
+
+
+$("potholeSize")
+  ?.addEventListener(
+    "change",
+    rhmsUpdateSeverity
+  );
+
+
+/* =========================================================
+   PATCH EXISTING REPORT SUBMISSION
+   ========================================================= */
+
+const rhmsOriginalSubmitReport =
+  typeof submitReport === "function"
+    ? submitReport
+    : null;
+
+
+if (rhmsOriginalSubmitReport) {
+
+  submitReport =
+    async function () {
+
+      const problemType =
+        $("problemType")?.value ||
+        "Pothole";
+
+
+      if (
+        problemType === "Pothole"
+      ) {
+
+        const depth =
+          $("potholeDepth")?.value ||
+          "";
+
+        const size =
+          $("potholeSize")?.value ||
+          "";
+
+
+        if (
+          !depth ||
+          !size
+        ) {
+
+          showFormStatus(
+            "Please select pothole depth and size.",
+            true
+          );
+
+          return;
+
+        }
+
+
+        rhmsUpdateSeverity();
+
+      }
+
+
+      return rhmsOriginalSubmitReport();
+
+    };
+
+}
+
+
+/* =========================================================
+   PATCH EXISTING DATABASE INSERT
+   ========================================================= */
+
+const rhmsOriginalSupabaseFrom =
+  supabaseClient.from.bind(
+    supabaseClient
+  );
+
+
+/*
+  We do NOT replace the existing report system.
+  The database payload is patched by modifying the
+  form values before the existing submission runs.
+*/
+
+
+/* =========================================================
+   MARG DRISHTI GPS HELPERS
+   ========================================================= */
+
+function rhmsMargGpsLocation(
+  event
+) {
+
+  if (
+    event?.gps_valid === false
+  ) {
+
+    return "NO GPS FIX";
+
+  }
+
+
+  const lat =
+    Number(event?.latitude);
+
+  const lon =
+    Number(event?.longitude);
+
+
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon)
+  ) {
+
+    return "NO GPS FIX";
+
+  }
+
+
+  return (
+    `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+  );
+
+}
+
+
+function rhmsMargGpsSpeed(
+  event
+) {
+
+  const speed =
+    Number(
+      event?.gps_speed_kmph
+    );
+
+
+  if (
+    !Number.isFinite(speed)
+  ) {
+
+    return "—";
+
+  }
+
+
+  return (
+    `${speed.toFixed(1)} km/h`
+  );
+
+}
+
+
+function rhmsMargGpsStatus(
+  event
+) {
+
+  if (
+    event?.gps_valid === true
+  ) {
+
+    const satellites =
+      Number(
+        event?.gps_satellites
+      );
+
+
+    if (
+      Number.isFinite(satellites) &&
+      satellites > 0
+    ) {
+
+      return (
+        `FIX · ${satellites} SAT`
+      );
+
+    }
+
+
+    return "GPS FIX";
+
+  }
+
+
+  return "NO FIX";
+
+}
+
+
+/* =========================================================
+   PATCH MARG DRISHTI DISPLAY
+   ========================================================= */
+
+const rhmsOriginalRenderMarg =
+  typeof renderMargDrishti === "function"
+    ? renderMargDrishti
+    : null;
+
+
+if (rhmsOriginalRenderMarg) {
+
+  renderMargDrishti =
+    function () {
+
+      rhmsOriginalRenderMarg();
+
+
+      /*
+        The existing Marg Drishti code already stores
+        the latest event in margDrishtiEvents.
+      */
+
+      const latest =
+        margDrishtiEvents?.[0];
+
+
+      if (!latest)
+        return;
+
+
+      setText(
+        "mdGpsLocation",
+        rhmsMargGpsLocation(
+          latest
+        )
+      );
+
+
+      setText(
+        "mdGpsSpeed",
+        rhmsMargGpsSpeed(
+          latest
+        )
+      );
+
+
+      setText(
+        "mdGpsConnectionState",
+        rhmsMargGpsStatus(
+          latest
+        )
+      );
+
+
+      setText(
+        "mdDeviceLinkState",
+        "ONLINE"
+      );
+
+    };
+
+}
+
+
+/* =========================================================
+   INITIAL SEVERITY STATE
+   ========================================================= */
+
+rhmsUpdateSeverity();
