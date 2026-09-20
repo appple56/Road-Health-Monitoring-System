@@ -1,1397 +1,1610 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RHMS — Road Health Monitoring System</title>
-  <meta name="theme-color" content="#070a10">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-
-<div class="ambient ambient-a"></div>
-<div class="ambient ambient-b"></div>
-<div class="grid-bg"></div>
-
-<div id="toast" class="toast"></div>
-
-<header class="topnav">
-
-  <div class="brand">
-    <img src="assets/rhms-logo.png" alt="RHMS">
-
-    <div>
-      <strong>RHMS</strong>
-      <small>ROAD HEALTH MONITORING SYSTEM</small>
-    </div>
-  </div>
-
-  <nav id="nav" class="nav">
-
-    <button class="nav-btn active" data-page="dashboard">
-      ⌂ <span>Overview</span>
-    </button>
-
-    <button class="nav-btn" data-page="visual">
-      ◉ <span>Visual</span>
-    </button>
-
-    <button class="nav-btn" data-page="report">
-      ＋ <span>Report</span>
-    </button>
-
-    <button class="nav-btn" data-page="map">
-      ⌖ <span>Map</span>
-    </button>
-
-    <button class="nav-btn" data-page="gallery">
-      ▦ <span>Gallery</span>
-    </button>
-
-    <button class="nav-btn" data-page="reports">
-      ≡ <span>Reports</span>
-    </button>
-
-    <button class="nav-btn" data-page="pipes">
-      ≈ <span>Pipes</span>
-    </button>
-
-    <button class="nav-btn" data-page="marg-drishti">
-      ◈ <span>Marg Drishti</span>
-    </button>
-
-  </nav>
-
-  <div class="top-status">
-    <i></i>
-    <span id="systemText">SYSTEM ONLINE</span>
-  </div>
-
-</header>
-
-
-<main class="app">
-
-  <header class="topbar">
-
-    <div>
-
-      <small>
-        ONLINE INSPECTION / DETECTION PORTAL
-      </small>
-
-      <h1 id="pageTitle">
-        Overview
-      </h1>
-
-    </div>
-
-    <div id="currentDate"></div>
-
-  </header>
-
-
-  <!-- =====================================================
-       OVERVIEW
-       ===================================================== -->
-
-  <section class="page active" id="dashboard">
-
-    <div class="hero">
-
-      <div>
-
-        <span class="eyebrow">
-          SMART MONITORING · SAFER ROADS
-        </span>
-
-        <h2>
-          Detect problems<br>
-          <em>before they grow.</em>
-        </h2>
-
-        <p>
-          RHMS combines public road reports,
-          geospatial mapping, underground leakage monitoring,
-          visual inspection and Marg Drishti AI road sensing.
-        </p>
-
-        <button
-          class="primary"
-          data-jump="report"
-        >
-          Report a road problem →
-        </button>
-
-      </div>
-
-
-      <div class="hero-orbit">
-        <div>RHMS</div>
-      </div>
-
-    </div>
-
-
-    <div class="stats">
-
-      <div>
-        <span>TOTAL REPORTS</span>
-        <strong id="totalReports">0</strong>
-      </div>
-
-      <div>
-        <span>PENDING</span>
-        <strong id="pendingReports">0</strong>
-      </div>
-
-      <div>
-        <span>VERIFIED</span>
-        <strong id="verifiedReports">0</strong>
-      </div>
-
-      <div>
-        <span>ACTIVE LEAKS</span>
-        <strong id="activeLeaks">—</strong>
-      </div>
-
-    </div>
-
-
-    <div class="section-title">
-
-      <div>
-
-        <small>CORE MODULES</small>
-
-        <h2>
-          Operational view
-        </h2>
-
-      </div>
-
-    </div>
-
-
-    <div class="module-grid">
-
-      <button class="module" data-jump="map">
-        <b>⌖</b>
-        <span>GEOSPATIAL</span>
-        <h3>Pothole Map</h3>
-        <p>
-          View reported road problems on a live map.
-        </p>
-      </button>
-
-
-      <button class="module" data-jump="report">
-        <b>＋</b>
-        <span>FIELD REPORT</span>
-        <h3>Report Problem</h3>
-        <p>
-          Upload evidence, location, depth,
-          size and severity.
-        </p>
-      </button>
-
-
-      <button class="module" data-jump="pipes">
-        <b>≈</b>
-        <span>INFRASTRUCTURE</span>
-        <h3>Pipe Monitoring</h3>
-        <p>
-          Monitor eight leak-sensing zones.
-        </p>
-      </button>
-
-
-      <button class="module" data-jump="marg-drishti">
-        <b>◈</b>
-        <span>AI ROAD SENSING</span>
-        <h3>Marg Drishti</h3>
-        <p>
-          Live vehicle-mounted road-condition
-          AI and GPS.
-        </p>
-      </button>
-
-    </div>
-
-
-    <div class="two-col">
-
-      <div class="panel">
-
-        <div class="panel-head">
-
-          <div>
-
-            <small>
-              RECENT ACTIVITY
-            </small>
-
-            <h3>
-              Latest reports
-            </h3>
-
-          </div>
-
-        </div>
-
-        <div
-          id="recentReports"
-          class="list"
-        ></div>
-
-      </div>
-
-
-      <div class="panel">
-
-        <div class="panel-head">
-
-          <div>
-
-            <small>
-              SYSTEM STATUS
-            </small>
-
-            <h3>
-              Infrastructure
-            </h3>
-
-          </div>
-
-        </div>
-
-        <div class="status-row">
-          <span>Database</span>
-          <strong id="dbStatus">CHECKING</strong>
-        </div>
-
-        <div class="status-row">
-          <span>Storage</span>
-          <strong id="storageStatus">READY</strong>
-        </div>
-
-        <div class="status-row">
-          <span>Last sync</span>
-          <strong id="lastSync">—</strong>
-        </div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       REPORT
-       ===================================================== -->
-
-  <section class="page" id="report">
-
-    <div class="page-head">
-
-      <div>
-
-        <small>
-          FIELD SUBMISSION
-        </small>
-
-        <h2>
-          Report Road Problem
-        </h2>
-
-        <p>
-          Upload evidence and save its geographic
-          location to RHMS.
-        </p>
-
-      </div>
-
-    </div>
-
-
-    <div class="two-col report-layout">
-
-      <div class="panel form-panel">
-
-        <div class="step">
-          <b>01</b>
-
-          <div>
-            <strong>Evidence</strong>
-            <small>
-              Select a road-condition image.
-            </small>
-          </div>
-        </div>
-
-
-        <label
-          class="upload-zone"
-          id="uploadZone"
-        >
-
-          <input
-            id="potholeImage"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-          >
-
-          <span class="upload-icon">
-            ↑
-          </span>
-
-          <strong id="uploadTitle">
-            Drop image here or click to browse
-          </strong>
-
-          <small>
-            JPG, PNG or WEBP · up to 10 MB
-          </small>
-
-          <img
-            id="imagePreview"
-            alt="Preview"
-          >
-
-        </label>
-
-
-        <div class="step">
-
-          <b>02</b>
-
-          <div>
-
-            <strong>
-              Classification
-            </strong>
-
-            <small>
-              Describe the problem.
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <label>
-
-          Problem type
-
-          <select id="problemType">
-
-            <option>
-              Pothole
-            </option>
-
-            <option>
-              Road Crack
-            </option>
-
-            <option>
-              Water Damage
-            </option>
-
-            <option>
-              Surface Damage
-            </option>
-
-            <option>
-              Other
-            </option>
-
-          </select>
-
-        </label>
-
-
-        <label>
-
-          Description
-
-          <textarea
-            id="description"
-            rows="4"
-            placeholder="Describe the road condition, nearby landmark, traffic impact, etc."
-          ></textarea>
-
-        </label>
-
-
-        <!-- POTHOLE ASSESSMENT -->
-
-        <div
-          id="potholeMeasurements"
-          class="assessment"
-        >
-
-          <div class="assessment-head">
-
-            <div>
-
-              <small>
-                POTHOLE ASSESSMENT
-              </small>
-
-              <h3>
-                Depth, size & severity
-              </h3>
-
-              <p>
-                Select the closest ranges.
-                RHMS calculates a project severity grade.
-              </p>
-
-            </div>
-
-            <span
-              id="severityBadge"
-              class="severity none"
-            >
-              SELECT DATA
-            </span>
-
-          </div>
-
-
-          <div class="form-grid">
-
-            <label>
-
-              Pothole depth
-
-              <select id="potholeDepth">
-
-                <option value="">
-                  Select depth
-                </option>
-
-                <option value="Less than 2 cm">
-                  Less than 2 cm
-                </option>
-
-                <option value="2–5 cm">
-                  2–5 cm
-                </option>
-
-                <option value="5–10 cm">
-                  5–10 cm
-                </option>
-
-                <option value="10–20 cm">
-                  10–20 cm
-                </option>
-
-                <option value="More than 20 cm">
-                  More than 20 cm
-                </option>
-
-              </select>
-
-            </label>
-
-
-            <label>
-
-              Pothole size
-
-              <select id="potholeSize">
-
-                <option value="">
-                  Select size
-                </option>
-
-                <option value="Small (< 0.25 m²)">
-                  Small (&lt; 0.25 m²)
-                </option>
-
-                <option value="Medium (0.25–1 m²)">
-                  Medium (0.25–1 m²)
-                </option>
-
-                <option value="Large (1–2.5 m²)">
-                  Large (1–2.5 m²)
-                </option>
-
-                <option value="Very large (> 2.5 m²)">
-                  Very large (&gt; 2.5 m²)
-                </option>
-
-              </select>
-
-            </label>
-
-          </div>
-
-
-          <div
-            id="severityExplain"
-            class="explain"
-          >
-            Select both depth and size
-            to calculate severity.
-          </div>
-
-        </div>
-
-
-        <!-- LOCATION -->
-
-        <div class="step">
-
-          <b>03</b>
-
-          <div>
-
-            <strong>
-              Location
-            </strong>
-
-            <small>
-              Use your current device location.
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <div class="location">
-
-          <span>
-            ⌖
-          </span>
-
-          <div>
-
-            <strong id="locationText">
-              Location not captured
-            </strong>
-
-            <small>
-              Latitude / longitude will be saved
-              with the report.
-            </small>
-
-          </div>
-
-          <button
-            class="secondary"
-            id="locationBtn"
-            type="button"
-          >
-            Detect
-          </button>
-
-        </div>
-
-
-        <input
-          type="hidden"
-          id="latitude"
-        >
-
-        <input
-          type="hidden"
-          id="longitude"
-        >
-
-
-        <button
-          id="submitReportBtn"
-          class="primary full"
-          type="button"
-        >
-          Submit report →
-        </button>
-
-
-        <div
-          id="reportStatus"
-          class="form-status"
-        ></div>
-
-      </div>
-
-
-      <!-- PREVIEW -->
-
-      <div class="panel preview-panel">
-
-        <small>
-          SUBMISSION PREVIEW
-        </small>
-
-        <h3>
-          Before you send
-        </h3>
-
-
-        <div class="preview">
-
-          <div id="previewImageBox">
-            IMAGE PREVIEW
-          </div>
-
-
-          <div>
-
-            <strong id="previewType">
-              Pothole
-            </strong>
-
-            <h4 id="previewDescription">
-              No description yet
-            </h4>
-
-            <small id="previewDepth">
-              Depth: —
-            </small>
-
-            <small id="previewSize">
-              Size: —
-            </small>
-
-            <small id="previewSeverity">
-              Severity: SELECT DATA
-            </small>
-
-            <small id="previewLocation">
-              Location pending
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <div class="tip">
-
-          <b>
-            TIP
-          </b>
-
-          <p>
-            Use the closest depth and
-            surface-size ranges. The severity
-            grade is calculated automatically
-            from those selections.
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       MAP
-       ===================================================== -->
-
-  <section class="page" id="map">
-
-    <div class="page-head">
-
-      <div>
-
-        <small>
-          GEOSPATIAL INTELLIGENCE
-        </small>
-
-        <h2>
-          Pothole Map
-        </h2>
-
-        <p>
-          All submitted road reports with
-          valid GPS coordinates.
-        </p>
-
-      </div>
-
-      <div>
-
-        <button
-          class="secondary"
-          id="fitMarkersBtn"
-        >
-          Fit reports
-        </button>
-
-      </div>
-
-    </div>
-
-
-    <div class="map-shell">
-
-      <div id="potholeMap"></div>
-
-      <div class="map-badge">
-
-        <b id="mapCount">
-          0
-        </b>
-
-        mapped reports
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       GALLERY
-       ===================================================== -->
-
-  <section class="page" id="gallery">
-
-    <div class="page-head">
-
-      <div>
-
-        <small>
-          FIELD EVIDENCE
-        </small>
-
-        <h2>
-          Image Gallery
-        </h2>
-
-      </div>
-
-
-      <button
-        class="secondary"
-        id="refreshGallery"
-      >
-        ↻ Refresh
-      </button>
-
-    </div>
-
-
-    <div class="toolbar">
-
-      <input
-        id="gallerySearch"
-        placeholder="Search descriptions or problem types…"
-      >
-
-      <select id="galleryFilter">
-
-        <option value="all">
-          All reports
-        </option>
-
-        <option>
-          Pending
-        </option>
-
-        <option>
-          Verified
-        </option>
-
-        <option>
-          Resolved
-        </option>
-
-      </select>
-
-    </div>
-
-
-    <div
-      id="galleryGrid"
-      class="gallery-grid"
-    ></div>
-
-  </section>
-
-
-  <!-- =====================================================
-       REPORTS
-       ===================================================== -->
-
-  <section class="page" id="reports">
-
-    <div class="page-head">
-
-      <div>
-
-        <small>
-          FIELD LOG
-        </small>
-
-        <h2>
-          Road Reports
-        </h2>
-
-        <p>
-          Complete history of submitted
-          road-condition reports.
-        </p>
-
-      </div>
-
-    </div>
-
-
-    <div class="panel">
-
-      <div
-        id="reportsList"
-        class="reports-list"
-      ></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       PIPE MONITORING
-       ===================================================== -->
-
-  <section class="page" id="pipes">
-
-    <div class="page-head">
-
-      <div>
-
-        <small>
-          UNDERGROUND INFRASTRUCTURE
-        </small>
-
-        <h2>
-          Pipe Monitoring
-        </h2>
-
-        <p>
-          Eight sensing zones across
-          two monitored pipe lines.
-        </p>
-
-      </div>
-
-
-      <span
-        id="pipeConnection"
-        class="badge online"
-      >
-        LIVE
-      </span>
-
-    </div>
-
-
-    <div class="pipe-grid">
-
-      <div class="panel pipe-card">
-
-        <div class="panel-head">
-
-          <div>
-
-            <small>
-              PIPE 01
-            </small>
-
-            <h3>
-              A1 — A4
-            </h3>
-
-          </div>
-
-          <strong id="pipeAState">
-            STABLE
-          </strong>
-
-        </div>
-
-
-        <div
-          id="zonesA"
-          class="zone-grid"
-        ></div>
-
-      </div>
-
-
-      <div class="panel pipe-card">
-
-        <div class="panel-head">
-
-          <div>
-
-            <small>
-              PIPE 02
-            </small>
-
-            <h3>
-              B1 — B4
-            </h3>
-
-          </div>
-
-          <strong id="pipeBState">
-            STABLE
-          </strong>
-
-        </div>
-
-
-        <div
-          id="zonesB"
-          class="zone-grid"
-        ></div>
-
-      </div>
-
-    </div>
-
-
-    <div
-      id="pipeAlert"
-      class="alert"
-    >
-
-      <strong id="pipeAlertTitle">
-        PIPELINE ALERT
-      </strong>
-
-      <span id="pipeAlertText">
-        Leakage detected.
-      </span>
-
-    </div>
-
-
-    <div class="panel pipe-note">
-
-      Conductive water bridge →
-      digital LOW → LEAK ·
-      Last poll:
-
-      <strong id="lastPipePoll">
-        —
-      </strong>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       MARG DRISHTI
-       ===================================================== -->
-
-  <section
-    class="page"
-    id="marg-drishti"
-  >
-
-    <div class="page-head">
-
-      <div>
-
-        <small>
-          AI VEHICLE ROAD MONITORING
-        </small>
-
-        <h2>
-          Marg Drishti
-        </h2>
-
-        <p>
-          Live 5-second AI classification
-          from the ESP32-C3 with MPU-6050
-          acceleration and NEO-6M GPS.
-        </p>
-
-      </div>
-
-
-      <div class="md-actions">
-
-        <span
-          id="margDrishtiConnection"
-          class="badge"
-        >
-          CONNECTING
-        </span>
-
-        <button
-          class="secondary"
-          id="refreshMargDrishti"
-        >
-          ↻ Refresh
-        </button>
-
-      </div>
-
-    </div>
-
-
-    <div class="md-top">
-
-      <div
-        id="mdStatusPanel"
-        class="panel md-current"
-        data-condition="unknown"
-      >
-
-        <div class="md-current-head">
-
-          <div>
-
-            <small>
-              CURRENT ROAD CONDITION
-            </small>
-
-            <div class="md-title-row">
-
-              <h3 id="mdCurrentCondition">
-                WAITING FOR DATA
-              </h3>
-
-              <span
-                id="mdConditionTag"
-                class="tag"
-              >
-                NO EVENT
-              </span>
-
-            </div>
-
-          </div>
-
-
-          <div
-            id="mdConditionIcon"
-            class="md-icon"
-          >
-            ◈
-          </div>
-
-        </div>
-
-
-        <p id="mdLiveMessage">
-          Waiting for the first
-          Marg Drishti event…
-        </p>
-
-
-        <div class="md-meta">
-
-          <div>
-            <span>VEHICLE</span>
-            <b id="mdVehicleStatus">—</b>
-          </div>
-
-          <div>
-            <span>AI CONFIDENCE</span>
-            <b id="mdConfidence">—</b>
-          </div>
-
-          <div>
-            <span>GPS LOCATION</span>
-            <b id="mdGpsLocation">NO FIX</b>
-          </div>
-
-          <div>
-            <span>GPS SPEED</span>
-            <b id="mdGpsSpeed">—</b>
-          </div>
-
-          <div>
-            <span>DEVICE</span>
-            <b id="mdDeviceId">—</b>
-          </div>
-
-          <div>
-            <span>LAST UPDATE</span>
-            <b id="mdLastUpdate">—</b>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <aside class="panel md-connection">
-
-        <div class="panel-head">
-
-          <div>
-
-            <small>
-              DATA CONNECTION
-            </small>
-
-            <h3>
-              Marg Drishti Link
-            </h3>
-
-          </div>
-
-
-          <span
-            id="mdConnectionChip"
-            class="badge"
-          >
-            OFFLINE
-          </span>
-
-        </div>
-
-
-        <div class="link-state">
-
-          <i id="mdConnectionDot"></i>
-
-          <div>
-
-            <b id="mdConnectionText">
-              Connecting…
-            </b>
-
-            <small>
-              Supabase → marg_drishti_events
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <div class="status-row">
-          <span>Device</span>
-          <b id="mdDeviceLinkState">
-            WAITING
-          </b>
-        </div>
-
-        <div class="status-row">
-          <span>GPS</span>
-          <b id="mdGpsConnectionState">
-            NO FIX
-          </b>
-        </div>
-
-        <div class="status-row">
-          <span>Realtime</span>
-          <b id="mdRealtimeState">
-            CONNECTING
-          </b>
-        </div>
-
-        <div class="status-row">
-          <span>Database</span>
-          <b id="mdDatabaseState">
-            CHECKING
-          </b>
-        </div>
-
-        <div class="status-row">
-          <span>Update cycle</span>
-          <b>
-            5 SEC
-          </b>
-        </div>
-
-      </aside>
-
-    </div>
-
-
-    <div class="md-counts">
-
-      <div>
-        <span>NORMAL ROAD</span>
-        <b id="mdNormalCount">0</b>
-      </div>
-
-      <div>
-        <span>SPEED BREAKER</span>
-        <b id="mdBreakerCount">0</b>
-      </div>
-
-      <div>
-        <span>POTHOLE</span>
-        <b id="mdPotholeCount">0</b>
-      </div>
-
-      <div>
-        <span>ROUGH SURFACE</span>
-        <b id="mdRoughCount">0</b>
-      </div>
-
-      <div>
-        <span>STATIONARY</span>
-        <b id="mdStationaryCount">0</b>
-      </div>
-
-    </div>
-
-
-    <div class="panel">
-
-      <div class="panel-head">
-
-        <div>
-
-          <small>
-            5-SECOND STREAM
-          </small>
-
-          <h3>
-            Recent detections
-          </h3>
-
-        </div>
-
-        <span
-          id="mdHistoryCount"
-          class="badge"
-        >
-          0 EVENTS
-        </span>
-
-      </div>
-
-
-      <div
-        id="mdHistory"
-        class="md-history"
-      ></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       VISUAL
-       ===================================================== -->
-
-  <section class="page" id="visual">
-
-    <div class="page-head">
-
-      <div>
-
-        <small>
-          ESP32-CAM
-        </small>
-
-        <h2>
-          Visual Inspection
-        </h2>
-
-        <p>
-          Latest camera frame stored in Supabase.
-        </p>
-
-      </div>
-
-
-      <span
-        id="cameraStatus"
-        class="badge"
-      >
-        OFFLINE
-      </span>
-
-    </div>
-
-
-    <div class="two-col">
-
-      <div class="panel camera">
-
-        <div id="cameraPlaceholder">
-          WAITING FOR CAMERA FRAME
-        </div>
-
-        <img
-          id="cameraStream"
-          alt="ESP32-CAM latest frame"
-        >
-
-      </div>
-
-
-      <div class="panel">
-
-        <div class="panel-head">
-
-          <div>
-
-            <small>
-              CAMERA STATUS
-            </small>
-
-            <h3 id="cameraCloudState">
-              CONNECTING
-            </h3>
-
-          </div>
-
-        </div>
-
-
-        <p id="cameraCloudTime">
-          Waiting for latest image…
-        </p>
-
-
-        <button
-          id="refreshCameraBtn"
-          class="secondary"
-        >
-          ↻ Refresh
-        </button>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <footer>
-    RHMS · ROAD HEALTH MONITORING SYSTEM · FIELD PORTAL
-  </footer>
-
-</main>
-
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="app.js"></script>
-
-</body>
-</html>
+:root{
+--bg:#070a10;
+--panel:#0d121b;
+--panel2:#101722;
+--line:#202a38;
+--text:#f4f7fb;
+--muted:#8d99aa;
+--cyan:#31e7ff;
+--orange:#ff9f43;
+--violet:#a98bff;
+--red:#ff5b6e;
+--green:#42e8a1;
+--shadow:0 24px 80px rgba(0,0,0,.35)
+}
+
+*{box-sizing:border-box}
+
+html{scroll-behavior:smooth}
+
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+font-family:Inter,system-ui,sans-serif;
+overflow-x:hidden
+}
+
+button,input,textarea,select{font:inherit}
+
+button{
+cursor:pointer;
+color:inherit
+}
+
+.ambient{
+position:fixed;
+pointer-events:none;
+filter:blur(80px);
+opacity:.12;
+z-index:0
+}
+
+.ambient-a{
+width:420px;
+height:420px;
+background:var(--cyan);
+left:-180px;
+top:80px
+}
+
+.ambient-b{
+width:460px;
+height:460px;
+background:var(--violet);
+right:-200px;
+bottom:-150px
+}
+
+.grid-bg{
+position:fixed;
+inset:0;
+z-index:-1;
+background-image:
+linear-gradient(rgba(49,231,255,.025) 1px,transparent 1px),
+linear-gradient(90deg,rgba(49,231,255,.025) 1px,transparent 1px);
+background-size:55px 55px;
+mask-image:linear-gradient(to bottom,black,transparent)
+}
+
+.topnav{
+position:sticky;
+top:0;
+z-index:50;
+height:76px;
+display:flex;
+align-items:center;
+gap:22px;
+padding:0 26px;
+background:rgba(7,10,16,.92);
+backdrop-filter:blur(18px);
+border-bottom:1px solid var(--line)
+}
+
+.brand{
+display:flex;
+align-items:center;
+gap:11px;
+min-width:225px
+}
+
+.brand img{
+width:42px;
+height:42px;
+border-radius:12px;
+border:1px solid #2e4251;
+object-fit:contain;
+background:#0b1118
+}
+
+.brand strong{
+display:block;
+font:700 20px "Space Grotesk";
+letter-spacing:1px
+}
+
+.brand small{
+display:block;
+color:#627084;
+font-size:7px;
+letter-spacing:1px;
+margin-top:2px
+}
+
+.nav{
+display:flex;
+gap:5px;
+flex:1;
+overflow-x:auto
+}
+
+.nav-btn{
+border:0;
+background:transparent;
+color:#8491a2;
+padding:9px 11px;
+border-radius:10px;
+white-space:nowrap;
+font-size:11px
+}
+
+.nav-btn:hover{
+background:#111925;
+color:#fff
+}
+
+.nav-btn.active{
+color:#fff;
+background:rgba(49,231,255,.09);
+box-shadow:inset 0 -2px var(--cyan)
+}
+
+.top-status{
+font-size:9px;
+letter-spacing:1px;
+color:#92d9bd;
+display:flex;
+gap:7px;
+align-items:center;
+white-space:nowrap
+}
+
+.top-status i{
+width:7px;
+height:7px;
+border-radius:50%;
+background:var(--green);
+box-shadow:0 0 12px rgba(66,232,161,.6)
+}
+
+.app{
+max-width:1500px;
+margin:auto;
+padding:0 28px 30px
+}
+
+.topbar{
+height:90px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+border-bottom:1px solid rgba(32,42,56,.75)
+}
+
+.topbar small,
+.page-head>div>small,
+.section-title>div>small,
+.panel small,
+.eyebrow{
+color:#637287;
+letter-spacing:1.4px;
+font-size:8px;
+font-weight:800
+}
+
+.topbar h1{
+font:600 25px "Space Grotesk";
+margin:5px 0
+}
+
+.topbar>div:last-child{
+color:#6f7d90;
+font-size:10px
+}
+
+.page{
+display:none;
+padding:28px 0
+}
+
+.page.active{
+display:block;
+animation:fade .35s ease
+}
+
+@keyframes fade{
+from{
+opacity:0;
+transform:translateY(7px)
+}
+to{
+opacity:1;
+transform:none
+}
+}
+
+.hero{
+min-height:310px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:30px;
+padding:48px;
+border:1px solid var(--line);
+border-radius:26px;
+background:
+radial-gradient(circle at 75% 20%,rgba(49,231,255,.1),transparent 25%),
+linear-gradient(135deg,#0d151f,#090e15);
+box-shadow:var(--shadow)
+}
+
+.hero h2{
+font:700 clamp(38px,5vw,62px) "Space Grotesk";
+line-height:.95;
+letter-spacing:-2.5px;
+margin:12px 0
+}
+
+.hero h2 em{
+font-style:normal;
+color:#8fa0b4
+}
+
+.hero p{
+max-width:620px;
+color:#8795a7;
+font-size:13px;
+line-height:1.7
+}
+
+.hero-orbit{
+width:190px;
+height:190px;
+border-radius:50%;
+border:1px solid #2a4350;
+display:grid;
+place-items:center;
+color:var(--cyan);
+font:700 18px "Space Grotesk";
+box-shadow:
+0 0 80px rgba(49,231,255,.08),
+inset 0 0 40px rgba(49,231,255,.04);
+animation:spin 12s linear infinite
+}
+
+@keyframes spin{
+to{
+transform:rotate(360deg)
+}
+}
+
+.primary,
+.secondary{
+border-radius:10px;
+padding:11px 15px;
+font-size:10px;
+font-weight:800
+}
+
+.primary{
+border:0;
+background:linear-gradient(135deg,#2bd9ee,#6b9cff);
+color:#041018
+}
+
+.secondary{
+border:1px solid #2b3747;
+background:#0d141e;
+color:#aeb9c6
+}
+
+.primary:hover,
+.secondary:hover{
+filter:brightness(1.08);
+transform:translateY(-1px)
+}
+
+.full{
+width:100%
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:12px;
+margin:15px 0 38px
+}
+
+.stats>div{
+min-height:125px;
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:17px;
+padding:18px
+}
+
+.stats span,
+.md-counts span{
+display:block;
+color:#69778a;
+font-size:8px;
+letter-spacing:1.2px;
+font-weight:800
+}
+
+.stats strong{
+display:block;
+font:700 40px "Space Grotesk";
+margin-top:15px
+}
+
+.section-title{
+margin-bottom:15px
+}
+
+.section-title h2,
+.page-head h2{
+font:700 34px "Space Grotesk";
+letter-spacing:-1px;
+margin:6px 0
+}
+
+.module-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:12px;
+margin-bottom:15px
+}
+
+.module{
+min-height:165px;
+border:1px solid var(--line);
+border-radius:18px;
+background:var(--panel);
+text-align:left;
+padding:18px;
+position:relative;
+transition:.2s
+}
+
+.module:hover{
+transform:translateY(-3px);
+border-color:#344153
+}
+
+.module b{
+font-size:21px;
+color:var(--cyan)
+}
+
+.module span{
+display:block;
+color:#68778a;
+font-size:8px;
+letter-spacing:1.1px;
+font-weight:800;
+margin-top:14px
+}
+
+.module h3{
+font:600 18px "Space Grotesk";
+margin:7px 0
+}
+
+.module p,
+.page-head p{
+font-size:10px;
+color:#738296;
+line-height:1.55;
+margin:0
+}
+
+.two-col{
+display:grid;
+grid-template-columns:1.4fr .6fr;
+gap:15px
+}
+
+.panel{
+background:rgba(13,18,27,.92);
+border:1px solid var(--line);
+border-radius:19px;
+padding:21px;
+box-shadow:0 15px 45px rgba(0,0,0,.13)
+}
+
+.panel-head{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:15px
+}
+
+.panel h3{
+font:600 20px "Space Grotesk";
+margin:6px 0
+}
+
+.status-row{
+display:flex;
+justify-content:space-between;
+gap:14px;
+border-top:1px solid #1a2430;
+padding:13px 0;
+color:#788699;
+font-size:10px
+}
+
+.status-row strong,
+.status-row b{
+color:#dbe4ed;
+font-size:9px
+}
+
+.page-head{
+display:flex;
+justify-content:space-between;
+gap:15px;
+align-items:end;
+margin-bottom:18px
+}
+
+.page-head>div:last-child{
+display:flex;
+gap:8px
+}
+
+.list{
+margin-top:10px
+}
+
+.list-item{
+display:grid;
+grid-template-columns:46px 1fr auto;
+gap:11px;
+align-items:center;
+padding:12px 0;
+border-top:1px solid #18212d
+}
+
+.thumb{
+width:46px;
+height:40px;
+border-radius:8px;
+object-fit:cover;
+background:#111925
+}
+
+.list-item strong{
+font-size:10px;
+display:block
+}
+
+.list-item small{
+display:block;
+color:#667589;
+font-size:8px;
+margin-top:4px
+}
+
+.badge{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:26px;
+padding:6px 9px;
+border-radius:8px;
+border:1px solid #344052;
+background:#111923;
+color:#8b98a8;
+font-size:8px;
+letter-spacing:1px;
+font-weight:800;
+white-space:nowrap
+}
+
+.badge.online{
+border-color:#214b3c;
+color:#8fe2bc;
+background:rgba(66,232,161,.05)
+}
+
+.badge.danger{
+border-color:#63303a;
+color:#ff99a6;
+background:rgba(255,91,110,.06)
+}
+
+.map-shell{
+position:relative;
+height:650px;
+border-radius:22px;
+overflow:hidden;
+border:1px solid var(--line);
+background:#0a0f16
+}
+
+.map-shell #potholeMap{
+width:100%;
+height:100%
+}
+
+.map-badge{
+position:absolute;
+z-index:500;
+top:15px;
+left:15px;
+background:rgba(6,10,15,.9);
+border:1px solid #2a3544;
+border-radius:9px;
+padding:10px 12px;
+color:#8290a1;
+font-size:9px
+}
+
+.map-badge b{
+color:#fff
+}
+
+.toolbar{
+display:flex;
+gap:9px;
+margin-bottom:14px
+}
+
+.toolbar input,
+.toolbar select,
+.form-panel select,
+.form-panel textarea{
+width:100%;
+border:1px solid #263242;
+background:#0b1119;
+color:#eaf0f6;
+border-radius:10px;
+padding:11px 12px;
+outline:0
+}
+
+.toolbar input{
+max-width:520px
+}
+
+.form-panel label{
+display:block;
+color:#8996a7;
+font-size:9px;
+margin-bottom:13px
+}
+
+.form-panel label>select,
+.form-panel label>textarea{
+display:block;
+margin-top:7px
+}
+
+.form-panel textarea{
+resize:vertical
+}
+
+.report-layout{
+align-items:start
+}
+
+.step{
+display:flex;
+gap:11px;
+align-items:center;
+border-top:1px solid #1a2430;
+padding:15px 0 11px
+}
+
+.step b{
+color:var(--cyan);
+font:700 12px "Space Grotesk"
+}
+
+.step strong,
+.step small{
+display:block
+}
+
+.step strong{
+font-size:11px
+}
+
+.step small{
+color:#68778a;
+font-size:8px;
+margin-top:3px
+}
+
+.upload-zone{
+height:215px;
+border:1px dashed #334052!important;
+border-radius:16px!important;
+background:linear-gradient(145deg,#0d151f,#0a1018)!important;
+display:flex!important;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+position:relative;
+overflow:hidden;
+cursor:pointer
+}
+
+.upload-zone:hover{
+border-color:var(--cyan)!important
+}
+
+.upload-zone input{
+display:none!important
+}
+
+.upload-zone .upload-icon{
+width:43px;
+height:43px;
+border-radius:11px;
+display:grid;
+place-items:center;
+background:rgba(49,231,255,.07);
+color:var(--cyan);
+font-size:22px;
+margin-bottom:10px
+}
+
+.upload-zone strong{
+font-size:11px
+}
+
+.upload-zone small{
+font-size:8px;
+color:#657487;
+margin-top:5px
+}
+
+.upload-zone img{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+object-fit:cover;
+display:none;
+opacity:.45
+}
+
+.upload-zone.has-image img{
+display:block
+}
+
+.assessment{
+margin:14px 0 18px;
+padding:17px;
+border-radius:16px;
+border:1px solid #263343;
+background:
+radial-gradient(circle at 85% 15%,rgba(255,91,110,.07),transparent 27%),
+#0b121a
+}
+
+.assessment.hidden{
+display:none
+}
+
+.assessment-head{
+display:flex;
+justify-content:space-between;
+gap:15px;
+align-items:start;
+margin-bottom:13px
+}
+
+.assessment-head h3{
+margin:5px 0
+}
+
+.assessment-head p{
+font-size:8px;
+color:#6f7e91;
+line-height:1.5;
+max-width:580px;
+margin:0
+}
+
+.form-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px
+}
+
+.form-grid label{
+margin:0
+}
+
+.severity{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:100px;
+min-height:30px;
+border-radius:8px;
+border:1px solid #344052;
+background:#121a24;
+color:#9ba8b8;
+font-size:8px;
+letter-spacing:1px;
+font-weight:900
+}
+
+.severity.low{
+color:#86e0b7;
+border-color:#235541;
+background:rgba(66,232,161,.08)
+}
+
+.severity.moderate{
+color:#ffd47a;
+border-color:#5a4a20;
+background:rgba(255,191,80,.08)
+}
+
+.severity.high{
+color:#ffb275;
+border-color:#65411f;
+background:rgba(255,159,67,.09)
+}
+
+.severity.critical{
+color:#ff8d9b;
+border-color:#682a36;
+background:rgba(255,91,110,.09)
+}
+
+.explain{
+margin-top:10px;
+padding:9px 11px;
+border-left:2px solid var(--cyan);
+background:rgba(49,231,255,.03);
+color:#7b899b;
+border-radius:0 8px 8px 0;
+font-size:8px;
+line-height:1.5
+}
+
+.location{
+display:flex;
+gap:11px;
+align-items:center;
+padding:11px;
+border:1px solid #253140;
+border-radius:11px;
+background:#0b1119;
+margin-bottom:13px
+}
+
+.location>span{
+width:34px;
+height:34px;
+border-radius:8px;
+display:grid;
+place-items:center;
+background:rgba(49,231,255,.07);
+color:var(--cyan);
+font-size:18px
+}
+
+.location>div{
+flex:1
+}
+
+.location strong,
+.location small{
+display:block
+}
+
+.location strong{
+font-size:9px
+}
+
+.location small{
+color:#667486;
+font-size:7px;
+margin-top:3px
+}
+
+.form-status{
+text-align:center;
+min-height:15px;
+margin-top:9px;
+font-size:9px
+}
+
+.form-status.error{
+color:#ff93a1
+}
+
+.form-status.success{
+color:#8ee3bd
+}
+
+.preview{
+margin-top:13px;
+border:1px solid #222d3b;
+border-radius:14px;
+overflow:hidden;
+background:#0a1018
+}
+
+.preview>#previewImageBox{
+height:250px;
+display:grid;
+place-items:center;
+color:#536175;
+font-size:8px;
+letter-spacing:1.2px;
+background:
+repeating-linear-gradient(
+45deg,
+#0e151f,
+#0e151f 10px,
+#0b1119 10px,
+#0b1119 20px
+)
+}
+
+.preview>#previewImageBox img{
+width:100%;
+height:100%;
+object-fit:cover
+}
+
+.preview>div:last-child{
+padding:14px
+}
+
+.preview strong{
+font-size:8px;
+color:var(--cyan);
+letter-spacing:1px
+}
+
+.preview h4{
+margin:6px 0;
+font:600 17px "Space Grotesk"
+}
+
+.preview small{
+display:block;
+color:#667487;
+font-size:8px;
+margin-top:4px
+}
+
+.preview #previewSeverity{
+color:#9fe7c4
+}
+
+.tip{
+border:1px solid #253140;
+border-radius:12px;
+padding:12px;
+margin-top:12px;
+background:#0b1119
+}
+
+.tip b{
+font-size:8px;
+color:var(--orange);
+letter-spacing:1.2px
+}
+
+.tip p{
+font-size:8px;
+line-height:1.55;
+color:#788698;
+margin:6px 0 0
+}
+
+.reports-list{
+overflow:auto
+}
+
+.report-row{
+display:grid;
+grid-template-columns:minmax(260px,1.5fr) .8fr .8fr .8fr;
+gap:14px;
+align-items:center;
+padding:13px 3px;
+border-bottom:1px solid #1a2430
+}
+
+.report-main{
+display:flex;
+gap:11px;
+align-items:center
+}
+
+.report-image{
+width:66px;
+height:48px;
+border-radius:8px;
+object-fit:cover;
+background:#111925
+}
+
+.report-id{
+font-size:7px;
+color:#59677a;
+letter-spacing:1px
+}
+
+.report-title{
+font-size:10px;
+font-weight:700;
+margin-top:4px
+}
+
+.report-type,
+.report-time{
+font-size:8px;
+color:#78879a
+}
+
+.status-pill{
+font-size:8px;
+padding:5px 7px;
+border-radius:6px;
+background:#18212c;
+color:#aab6c5
+}
+
+.status-pill.pending{
+color:#ffc67e
+}
+
+.status-pill.verified{
+color:#83e2b8
+}
+
+.status-pill.resolved{
+color:#8fdcff
+}
+
+.pipe-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:14px
+}
+
+.pipe-card strong{
+font-size:9px;
+color:#8fe1bd
+}
+
+.zone-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px;
+margin-top:12px
+}
+
+.zone{
+padding:13px 8px;
+border-radius:11px;
+border:1px solid #214134;
+background:rgba(66,232,161,.03);
+text-align:center
+}
+
+.zone b{
+display:block;
+font:700 18px "Space Grotesk"
+}
+
+.zone span{
+display:block;
+color:#86d9b4;
+font-size:7px;
+margin-top:4px
+}
+
+.zone small{
+display:block;
+color:#596b7d;
+font-size:6px;
+margin-top:3px
+}
+
+.zone.leak{
+border-color:#682c37;
+background:rgba(255,91,110,.07)
+}
+
+.zone.leak b,
+.zone.leak span{
+color:var(--red)
+}
+
+.alert{
+display:none;
+margin-top:14px;
+border:1px solid #682d38;
+border-radius:12px;
+padding:13px 15px;
+background:rgba(255,91,110,.06)
+}
+
+.alert.show{
+display:block
+}
+
+.alert strong,
+.alert span{
+display:block
+}
+
+.alert strong{
+color:#ff9aa7;
+font-size:10px
+}
+
+.alert span{
+color:#a67880;
+font-size:8px;
+margin-top:4px
+}
+
+.pipe-note{
+margin-top:14px;
+color:#69798c;
+font-size:9px
+}
+
+.pipe-note strong{
+color:#dbe4ec
+}
+
+.md-actions{
+display:flex;
+gap:8px
+}
+
+.md-top{
+display:grid;
+grid-template-columns:1.55fr .45fr;
+gap:14px;
+margin-bottom:14px
+}
+
+.md-current{
+min-height:330px;
+position:relative;
+overflow:hidden;
+background:
+radial-gradient(circle at 80% 18%,rgba(49,231,255,.09),transparent 27%),
+linear-gradient(145deg,#0d151f,#090e15)
+}
+
+.md-current[data-condition=normal]{
+border-color:rgba(66,232,161,.3)
+}
+
+.md-current[data-condition=breaker]{
+border-color:rgba(255,159,67,.3)
+}
+
+.md-current[data-condition=pothole]{
+border-color:rgba(255,91,110,.35)
+}
+
+.md-current[data-condition=rough]{
+border-color:rgba(169,139,255,.3)
+}
+
+.md-current[data-condition=stationary]{
+border-color:rgba(49,231,255,.3)
+}
+
+.md-current-head{
+display:flex;
+justify-content:space-between;
+gap:15px;
+align-items:flex-start
+}
+
+.md-title-row{
+display:flex;
+gap:10px;
+align-items:center;
+flex-wrap:wrap
+}
+
+.md-current h3{
+font:700 39px "Space Grotesk";
+letter-spacing:-1.5px;
+margin:7px 0
+}
+
+.tag{
+border:1px solid #293646;
+background:#0a1119;
+border-radius:999px;
+padding:6px 9px;
+color:#8997a9;
+font-size:7px;
+letter-spacing:1px;
+font-weight:800
+}
+
+.md-icon{
+width:61px;
+height:61px;
+display:grid;
+place-items:center;
+border-radius:17px;
+color:var(--cyan);
+background:rgba(49,231,255,.07);
+border:1px solid #304050;
+font-size:25px
+}
+
+.md-current[data-condition=normal] .md-icon,
+.md-current[data-condition=normal] h3{
+color:var(--green)
+}
+
+.md-current[data-condition=breaker] .md-icon,
+.md-current[data-condition=breaker] h3{
+color:var(--orange)
+}
+
+.md-current[data-condition=pothole] .md-icon,
+.md-current[data-condition=pothole] h3{
+color:var(--red)
+}
+
+.md-current[data-condition=rough] .md-icon,
+.md-current[data-condition=rough] h3{
+color:var(--violet)
+}
+
+.md-current[data-condition=stationary] .md-icon,
+.md-current[data-condition=stationary] h3{
+color:var(--cyan)
+}
+
+.md-current>p{
+color:#8997a8;
+font-size:10px;
+line-height:1.6;
+max-width:680px;
+margin:28px 0 18px
+}
+
+.md-meta{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:9px
+}
+
+.md-meta>div{
+padding:11px;
+border:1px solid #1d2835;
+border-radius:11px;
+background:rgba(6,10,15,.65)
+}
+
+.md-meta span{
+display:block;
+color:#5c6b7e;
+font-size:7px;
+letter-spacing:1px;
+font-weight:800
+}
+
+.md-meta b{
+display:block;
+font-size:9px;
+margin-top:6px;
+color:#e3ebf2;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis
+}
+
+.md-connection{
+min-height:330px
+}
+
+.link-state{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px;
+border:1px solid #202b38;
+border-radius:12px;
+background:#0a1119;
+margin:20px 0 9px
+}
+
+.link-state i{
+width:9px;
+height:9px;
+border-radius:50%;
+background:#677487
+}
+
+.link-state i.online{
+background:var(--green);
+box-shadow:0 0 12px rgba(66,232,161,.5)
+}
+
+.link-state i.error{
+background:var(--red);
+box-shadow:0 0 12px rgba(255,91,110,.45)
+}
+
+.link-state b,
+.link-state small{
+display:block
+}
+
+.link-state b{
+font-size:9px
+}
+
+.link-state small{
+font-size:7px;
+color:#657487;
+margin-top:3px
+}
+
+.md-counts{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:10px;
+margin-bottom:14px
+}
+
+.md-counts>div{
+padding:15px;
+background:#0c131d;
+border:1px solid var(--line);
+border-radius:14px
+}
+
+.md-counts b{
+display:block;
+font:700 31px "Space Grotesk";
+margin-top:11px
+}
+
+.md-counts>div:nth-child(1) b{
+color:var(--green)
+}
+
+.md-counts>div:nth-child(2) b{
+color:var(--orange)
+}
+
+.md-counts>div:nth-child(3) b{
+color:var(--red)
+}
+
+.md-counts>div:nth-child(4) b{
+color:var(--violet)
+}
+
+.md-counts>div:nth-child(5) b{
+color:var(--cyan)
+}
+
+.md-history-head,
+.md-event{
+display:grid;
+grid-template-columns:1.1fr 1fr .9fr .55fr;
+gap:12px
+}
+
+.md-history-head{
+padding:0 2px 8px;
+color:#506075;
+font-size:7px;
+letter-spacing:1px;
+font-weight:800
+}
+
+.md-event{
+padding:12px 2px;
+border-top:1px solid #18212d;
+align-items:center
+}
+
+.md-event-condition{
+display:flex;
+gap:9px;
+align-items:center
+}
+
+.md-event-condition strong,
+.md-event-condition small{
+display:block
+}
+
+.md-event-condition strong{
+font-size:9px
+}
+
+.md-event-condition small{
+font-size:7px;
+color:#607087;
+margin-top:3px
+}
+
+.md-event-dot{
+width:7px;
+height:7px;
+border-radius:50%
+}
+
+.md-event-dot.normal{
+background:var(--green)
+}
+
+.md-event-dot.breaker{
+background:var(--orange)
+}
+
+.md-event-dot.pothole{
+background:var(--red)
+}
+
+.md-event-dot.rough{
+background:var(--violet)
+}
+
+.md-event-dot.stationary{
+background:var(--cyan)
+}
+
+.md-event-time,
+.md-event-device{
+font-size:8px;
+color:#718095
+}
+
+.md-event-device small{
+display:block;
+color:#4f6174;
+font-size:7px;
+margin-top:3px
+}
+
+.md-event-confidence{
+text-align:right;
+font-size:8px
+}
+
+.camera{
+min-height:520px;
+display:grid;
+place-items:center;
+background:#05080c;
+overflow:hidden
+}
+
+.camera img{
+display:none;
+max-width:100%;
+max-height:70vh;
+object-fit:contain
+}
+
+.gallery-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:13px
+}
+
+.gallery-card{
+background:#0d131c;
+border:1px solid var(--line);
+border-radius:15px;
+overflow:hidden
+}
+
+.gallery-card img{
+width:100%;
+height:170px;
+object-fit:cover;
+display:block
+}
+
+.gallery-body{
+padding:12px
+}
+
+.gallery-body h3{
+font:600 15px "Space Grotesk";
+margin:0 0 7px
+}
+
+.gallery-body p{
+font-size:8px;
+color:#778699;
+min-height:26px
+}
+
+.gallery-meta{
+display:flex;
+justify-content:space-between;
+align-items:center
+}
+
+.gallery-meta small{
+font-size:7px;
+color:#5e6d80
+}
+
+.toast{
+position:fixed;
+right:20px;
+bottom:20px;
+z-index:100;
+background:#111a25;
+border:1px solid #344254;
+color:#e9f0f7;
+padding:11px 14px;
+border-radius:10px;
+font-size:9px;
+opacity:0;
+transform:translateY(10px);
+pointer-events:none;
+transition:.2s
+}
+
+.toast.show{
+opacity:1;
+transform:none
+}
+
+.toast.error{
+border-color:#642f39;
+color:#ff9da9
+}
+
+.toast.success{
+border-color:#245642;
+color:#9be4c5
+}
+
+footer{
+text-align:center;
+color:#455265;
+font-size:7px;
+letter-spacing:1.4px;
+padding:25px 0
+}
+
+@media(max-width:1100px){
+
+.nav-btn span{
+display:none
+}
+
+.module-grid,
+.gallery-grid{
+grid-template-columns:repeat(2,1fr)
+}
+
+.stats{
+grid-template-columns:repeat(2,1fr)
+}
+
+.two-col,
+.md-top,
+.pipe-grid{
+grid-template-columns:1fr
+}
+
+.md-counts{
+grid-template-columns:repeat(3,1fr)
+}
+
+.md-meta{
+grid-template-columns:repeat(2,1fr)
+}
+
+.report-row{
+grid-template-columns:1.5fr .8fr .8fr
+}
+
+.page-head{
+align-items:start
+}
+
+.hero{
+padding:35px
+}
+
+.hero-orbit{
+display:none
+}
+
+}
+
+@media(max-width:700px){
+
+.topnav{
+height:auto;
+min-height:72px;
+padding:10px 12px;
+flex-wrap:wrap
+}
+
+.brand{
+min-width:180px
+}
+
+.nav{
+order:3;
+width:100%;
+overflow:auto
+}
+
+.app{
+padding:0 13px 25px
+}
+
+.topbar{
+height:75px
+}
+
+.hero h2{
+font-size:40px
+}
+
+.stats,
+.module-grid,
+.gallery-grid{
+grid-template-columns:1fr
+}
+
+.md-counts{
+grid-template-columns:1fr 1fr
+}
+
+.md-meta,
+.form-grid{
+grid-template-columns:1fr
+}
+
+.md-history-head{
+display:none
+}
+
+.md-event{
+grid-template-columns:1fr;
+gap:6px
+}
+
+.md-event-confidence{
+text-align:left
+}
+
+.report-row{
+grid-template-columns:1fr
+}
+
+.pipe-grid{
+grid-template-columns:1fr
+}
+
+.page-head{
+display:block
+}
+
+.page-head>div:last-child,
+.md-actions{
+margin-top:12px
+}
+
+.assessment-head{
+flex-direction:column
+}
+
+.zone-grid{
+grid-template-columns:repeat(2,1fr)
+}
+
+}
