@@ -1042,3 +1042,19 @@ body{background:#02060b;min-height:100vh}
   }
 
 }
+.upload-actions{
+  display:flex;
+  gap:9px;
+  margin-top:14px;
+  position:relative;
+  z-index:3;
+}
+
+.upload-actions .ghost-btn{
+  cursor:pointer;
+}
+
+.upload-zone.has-preview .upload-actions{
+  position:relative;
+  z-index:3;
+}
