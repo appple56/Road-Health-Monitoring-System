@@ -2060,7 +2060,47 @@ $("potholeImage")
     }
   );
 
+$("takePhotoBtn")
+  ?.addEventListener(
+    "click",
+    () => {
 
+      const input =
+        $("potholeImage");
+
+      if(!input)
+        return;
+
+      input.setAttribute(
+        "capture",
+        "environment"
+      );
+
+      input.click();
+
+    }
+  );
+
+
+$("uploadPhotoBtn")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      const input =
+        $("potholeImage");
+
+      if(!input)
+        return;
+
+      input.removeAttribute(
+        "capture"
+      );
+
+      input.click();
+
+    }
+  );
 /* =========================================================
    HANDLE SELECTED FILE
 ========================================================= */
