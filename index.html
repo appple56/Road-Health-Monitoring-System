@@ -722,10 +722,70 @@
       <div class="panel form-panel">
 
 
-        <!-- STEP 01 -->
+  <!-- STEP 01 -->
+
+<div class="form-step">
+  <span>01</span>
+
+  <div>
+    <b>Image Evidence</b>
+    <small>Take a photo or upload an existing image.</small>
+  </div>
+</div>
+
+<div class="upload-zone" id="uploadZone">
+
+  <input
+    id="potholeImage"
+    type="file"
+    accept="image/*"
+    hidden
+  >
+
+  <div class="upload-icon">↑</div>
+
+  <strong id="uploadTitle">
+    Add road image
+  </strong>
+
+  <small>
+    Take a photo or upload an existing image · up to 10 MB
+  </small>
+
+  <div class="upload-actions">
+
+    <button
+      type="button"
+      id="takePhotoBtn"
+      class="ghost-btn"
+    >
+      📷 Take Photo
+    </button>
+
+    <button
+      type="button"
+      id="uploadPhotoBtn"
+      class="ghost-btn"
+    >
+      📁 Upload Photo
+    </button>
+
+  </div>
+
+  <img
+    id="imagePreview"
+    class="upload-preview"
+    alt="Selected road image preview"
+  >
+
+</div>
+
+
+<!-- STEP 02 -->
 
 <div class="form-step">
   <span>02</span>
+
   <div>
     <b>Classification</b>
     <small>Describe what was found.</small>
@@ -734,71 +794,123 @@
 
 <label>
   Problem type
+
   <select id="problemType" class="input">
-    <option value="Pothole">Pothole</option>
-    <option value="Road Crack">Road Crack</option>
-    <option value="Water Damage">Water Damage</option>
-    <option value="Surface Damage">Surface Damage</option>
-    <option value="Other">Other</option>
+
+    <option value="Pothole">
+      Pothole
+    </option>
+
+    <option value="Road Crack">
+      Road Crack
+    </option>
+
+    <option value="Water Damage">
+      Water Damage
+    </option>
+
+    <option value="Surface Damage">
+      Surface Damage
+    </option>
+
+    <option value="Other">
+      Other
+    </option>
+
   </select>
 </label>
 
+
 <label>
   Description
+
   <textarea
     id="description"
     class="input"
     rows="5"
     placeholder="Describe the road condition, approximate size, nearby landmark, etc."
   ></textarea>
+
 </label>
 
-<div id="potholeAssessment" class="pothole-assessment">
+
+<div
+  id="potholeAssessment"
+  class="pothole-assessment"
+>
 
   <div class="assessment-head">
 
     <div>
-      <span class="eyebrow">POTHOLE ASSESSMENT</span>
-      <strong>Depth + affected area</strong>
+      <span class="eyebrow">
+        POTHOLE ASSESSMENT
+      </span>
+
+      <strong>
+        Depth + affected area
+      </strong>
     </div>
 
-    <span id="severityBadge" class="severity-badge">
+    <span
+      id="severityBadge"
+      class="severity-badge"
+    >
       SELECT BOTH
     </span>
 
   </div>
+
 
   <div class="assessment-grid">
 
     <label>
       Depth
 
-      <select id="potholeDepth" class="input">
-        <option value="">Select depth</option>
+      <select
+        id="potholeDepth"
+        class="input"
+      >
+
+        <option value="">
+          Select depth
+        </option>
+
         <option value="Less than 2 cm">
           Less than 2 cm
         </option>
+
         <option value="2–5 cm">
           2–5 cm
         </option>
+
         <option value="5–10 cm">
           5–10 cm
         </option>
+
         <option value="10–20 cm">
           10–20 cm
         </option>
+
         <option value="More than 20 cm">
           More than 20 cm
         </option>
+
       </select>
 
     </label>
 
+
     <label>
       Size / affected area
 
-      <select id="potholeSize" class="input">
-        <option value="">Select size</option>
+      <select
+        id="potholeSize"
+        class="input"
+      >
+
+        <option value="">
+          Select size
+        </option>
 
         <option value="Small (< 0.25 m²)">
           Small (&lt; 0.25 m²)
@@ -822,76 +934,12 @@
 
   </div>
 
+
   <small id="severityExplanation">
     Select the pothole depth and size to calculate severity.
   </small>
 
 </div>
-<!-- IMAGE PREVIEW -->
-
-<div
-  id="imagePreview"
-  class="image-preview"
-></div>
-        <!-- STEP 02 -->
-
-        <div class="form-step">
-
-          <span>02</span>
-
-          <div>
-            <b>Classification</b>
-
-            <small>
-              Describe what was found.
-            </small>
-          </div>
-
-        </div>
-
-
-        <label>
-          Problem type
-
-          <select id="problemType"
-                  class="input">
-
-            <option value="Pothole">
-              Pothole
-            </option>
-
-            <option value="Road Crack">
-              Road Crack
-            </option>
-
-            <option value="Water Damage">
-              Water Damage
-            </option>
-
-            <option value="Surface Damage">
-              Surface Damage
-            </option>
-
-            <option value="Other">
-              Other
-            </option>
-
-          </select>
-
-        </label>
-
-
-        <label>
-          Description
-
-          <textarea
-            id="description"
-            class="input"
-            rows="5"
-            placeholder="Describe the road condition, approximate size, nearby landmark, etc."
-          ></textarea>
-
-        </label>
 
 
   
