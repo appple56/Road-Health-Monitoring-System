@@ -2447,7 +2447,29 @@ async function submitReport(){
     return;
 
   }
+const problemType =
+  $("problemType")?.value || "Pothole";
 
+if(problemType === "Pothole"){
+
+  const depth =
+    $("potholeDepth")?.value || "";
+
+  const size =
+    $("potholeSize")?.value || "";
+
+  if(!depth || !size){
+
+    showFormStatus(
+      "Please select pothole depth and size.",
+      true
+    );
+
+    return;
+
+  }
+
+}
 
   if(button){
 
@@ -2601,8 +2623,12 @@ async function submitReport(){
         "",
 
       severity:
-        "Unknown",
-
+  $("problemType")?.value === "Pothole"
+    ? rhmsCalculateSeverity(
+        $("potholeDepth")?.value || "",
+        $("potholeSize")?.value || ""
+      )
+    : "N/A",
       status:
         "Pending"
 
@@ -4942,81 +4968,9 @@ $("potholeSize")
   );
 
 
-/* =========================================================
-   PATCH EXISTING REPORT SUBMISSION
-   ========================================================= */
-
-const rhmsOriginalSubmitReport =
-  typeof submitReport === "function"
-    ? submitReport
-    : null;
 
 
-if (rhmsOriginalSubmitReport) {
 
-  submitReport =
-    async function () {
-
-      const problemType =
-        $("problemType")?.value ||
-        "Pothole";
-
-
-      if (
-        problemType === "Pothole"
-      ) {
-
-        const depth =
-          $("potholeDepth")?.value ||
-          "";
-
-        const size =
-          $("potholeSize")?.value ||
-          "";
-
-
-        if (
-          !depth ||
-          !size
-        ) {
-
-          showFormStatus(
-            "Please select pothole depth and size.",
-            true
-          );
-
-          return;
-
-        }
-
-
-        rhmsUpdateSeverity();
-
-      }
-
-
-      return rhmsOriginalSubmitReport();
-
-    };
-
-}
-
-
-/* =========================================================
-   PATCH EXISTING DATABASE INSERT
-   ========================================================= */
-
-const rhmsOriginalSupabaseFrom =
-  supabaseClient.from.bind(
-    supabaseClient
-  );
-
-
-/*
-  We do NOT replace the existing report system.
-  The database payload is patched by modifying the
-  form values before the existing submission runs.
-*/
 
 
 /* =========================================================
