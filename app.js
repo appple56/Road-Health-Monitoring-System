@@ -2060,6 +2060,62 @@ $("potholeImage")
     }
   );
 
+
+/* =========================================================
+   TAKE PHOTO
+========================================================= */
+
+$("takePhotoBtn")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const input =
+        $("potholeImage");
+
+      if(!input)
+        return;
+
+      input.setAttribute(
+        "capture",
+        "environment"
+      );
+
+      input.click();
+
+    }
+  );
+
+
+/* =========================================================
+   UPLOAD EXISTING PHOTO
+========================================================= */
+
+$("uploadPhotoBtn")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const input =
+        $("potholeImage");
+
+      if(!input)
+        return;
+
+      input.removeAttribute(
+        "capture"
+      );
+
+      input.click();
+
+    }
+  );
 $("takePhotoBtn")
   ?.addEventListener(
     "click",
